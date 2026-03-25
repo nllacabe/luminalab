@@ -1,26 +1,686 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+    /* Pink / LUMINALAB brand palette */
+    --background: #fdf2f8;
+    --foreground: #1f2937;
+    --card: #ffffff;
+    --card-foreground: #1f2937;
+    --primary: #ec4899;
+    --primary-hover: #db2777;
+    --primary-foreground: #ffffff;
+    --secondary: #fce7f3;
+    --secondary-hover: #fbcfe8;
+    --secondary-foreground: #9d174d;
+    --muted: #fce7f3;
+    --muted-foreground: #9ca3af;
+    --accent: #f472b6;
+    --accent-foreground: #831843;
+    --border: #f9a8d4;
+    --input-border: #f9a8d4;
+    --ring: #ec4899;
+    --error: #d94f4f;
+    --error-foreground: #ffffff;
+    --success: #4a9e6e;
+    --radius: 0.75rem;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-primary: var(--primary);
+    --color-primary-hover: var(--primary-hover);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-hover: var(--secondary-hover);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-border: var(--border);
+    --color-input-border: var(--input-border);
+    --color-ring: var(--ring);
+    --color-error: var(--error);
+    --color-error-foreground: var(--error-foreground);
+    --color-success: var(--success);
+    --font-sans: var(--font-geist-sans);
+    --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ─── Base ───────────────────────────────────────── */
+
+* {
+    box-sizing: border-box;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans, "Inter", system-ui, -apple-system, sans-serif);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── Page wrapper — pink gradient + background ─── */
+
+.page-wrapper {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(180deg, #fdf2f8 0%, #fce7f3 30%, #fbcfe8 70%, #f9a8d4 100%);
+    background-image: url("/bg.png");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    position: relative;
+    overflow: hidden;
+}
+
+/* ─── Sparkle decorations ────────────────────────── */
+
+@keyframes sparkle-pulse {
+
+    0%,
+    100% {
+        opacity: 0.3;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.8;
+        transform: scale(1.3);
+    }
+}
+
+.sparkle {
+    position: absolute;
+    color: #f9a8d4;
+    pointer-events: none;
+    z-index: 0;
+    animation: sparkle-pulse 2s ease-in-out infinite;
+}
+
+/* ─── LUMINALAB Logo header ──────────────────────── */
+
+.logo-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem 2rem 0.5rem;
+    position: relative;
+    z-index: 1;
+}
+
+.logo-header img {
+    height: 44px;
+    width: auto;
+    object-fit: contain;
+}
+
+/* ─── Nav bar ────────────────────────────────────── */
+
+.pink-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 2rem;
+    position: relative;
+    z-index: 1;
+}
+
+/* ─── Form inputs ────────────────────────────────── */
+
+.input {
+    display: block;
+    width: 100%;
+    padding: 0.625rem 0.875rem;
+    border: 2px solid var(--input-border);
+    border-radius: var(--radius);
+    background: var(--card);
+    color: var(--foreground);
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input::placeholder {
+    color: var(--muted-foreground);
+}
+
+.input:focus {
+    border-color: var(--ring);
+    box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.15);
+}
+
+.input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ─── Buttons ────────────────────────────────────── */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.25rem;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    line-height: 1.5;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s, box-shadow 0.2s;
+    text-decoration: none;
+}
+
+.btn:active {
+    transform: scale(0.98);
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: var(--primary-foreground);
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: var(--primary-hover);
+    box-shadow: 0 2px 12px rgba(236, 72, 153, 0.3);
+}
+
+.btn-secondary {
+    background: var(--secondary);
+    color: var(--secondary-foreground);
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background: var(--secondary-hover);
+}
+
+.btn-outline {
+    background: transparent;
+    color: var(--foreground);
+    border: 2px solid var(--border);
+}
+
+.btn-outline:hover:not(:disabled) {
+    background: var(--secondary);
+    border-color: var(--accent);
+}
+
+.btn-ghost {
+    background: transparent;
+    color: var(--muted-foreground);
+}
+
+.btn-ghost:hover:not(:disabled) {
+    background: var(--muted);
+    color: var(--foreground);
+}
+
+.btn-pink {
+    background: rgba(255, 255, 255, 0.7);
+    color: var(--primary);
+    border: 2px solid var(--border);
+    font-weight: 600;
+}
+
+.btn-pink:hover:not(:disabled) {
+    background: #fff;
+    box-shadow: 0 4px 16px rgba(244, 114, 182, 0.2);
+    transform: translateY(-1px);
+}
+
+.btn-lg {
+    padding: 0.75rem 1.75rem;
+    font-size: 1.0625rem;
+    border-radius: calc(var(--radius) + 0.125rem);
+}
+
+.btn-full {
+    width: 100%;
+}
+
+/* ─── Labels ─────────────────────────────────────── */
+
+.label {
+    display: block;
+    margin-bottom: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--foreground);
+}
+
+/* ─── Divider ────────────────────────────────────── */
+
+.divider {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 1.25rem 0;
+    color: var(--muted-foreground);
+    font-size: 0.8125rem;
+}
+
+.divider::before,
+.divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+}
+
+/* ─── Card ───────────────────────────────────────── */
+
+.card {
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: calc(var(--radius) + 0.25rem);
+    padding: 2rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+/* ─── Pink card variant ──────────────────────────── */
+
+.card-pink {
+    background: var(--card);
+    border: 2px solid #f472b6;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 2px 12px rgba(244, 114, 182, 0.08);
+}
+
+/* ─── Error message ──────────────────────────────── */
+
+.error-message {
+    padding: 0.625rem 0.875rem;
+    border-radius: var(--radius);
+    background: color-mix(in srgb, var(--error) 10%, transparent);
+    color: var(--error);
+    font-size: 0.875rem;
+    border: 1px solid color-mix(in srgb, var(--error) 20%, transparent);
+}
+
+/* ─── Animations ─────────────────────────────────── */
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes shimmer {
+    from {
+        background-position: -200% center;
+    }
+
+    to {
+        background-position: 200% center;
+    }
+}
+
+.animate-fade-in {
+    animation: fade-in 0.5s ease-out forwards;
+}
+
+.animate-fade-in-delay {
+    opacity: 0;
+    animation: fade-in 0.5s ease-out 0.15s forwards;
+}
+
+.animate-fade-in-delay-2 {
+    opacity: 0;
+    animation: fade-in 0.5s ease-out 0.3s forwards;
+}
+
+/* ─── Spinner ────────────────────────────────────── */
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.spinner {
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid var(--border);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+}
+
+/* ─── Camera Capture ─────────────────────────────── */
+
+.camera-viewfinder {
+    position: relative;
+    background: #000;
+    border-radius: calc(var(--radius) + 0.25rem);
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+    border: 2px solid #f472b6;
+}
+
+.lighting-indicator {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.625rem 0.875rem;
+    border-radius: var(--radius);
+    border: 2px solid var(--border);
+    transition: background 0.4s, border-color 0.4s;
+}
+
+.lighting-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.6;
+        transform: scale(1.3);
+    }
+}
+
+.lighting-tips {
+    padding: 0.875rem 1rem;
+    border-radius: var(--radius);
+    background: var(--secondary);
+    border: 2px solid var(--border);
+    font-size: 0.8125rem;
+    color: var(--secondary-foreground);
+}
+
+.lighting-tips ul {
+    margin: 0;
+    padding-left: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.lighting-tips li {
+    line-height: 1.5;
+}
+
+/* ─── Upload area — pink dashed ──────────────────── */
+
+.upload-zone {
+    border: 2px dashed #f472b6;
+    border-radius: 16px;
+    padding: 2.5rem 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+    background: rgba(255, 255, 255, 0.85);
+}
+
+.upload-zone:hover {
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(244, 114, 182, 0.12);
+}
+
+.upload-zone.dragging {
+    border-color: var(--primary);
+    background: #fce7f3;
+    box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.1);
+}
+
+/* ─── Upload icon SVG ────────────────────────────── */
+
+.upload-icon {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 1rem;
+    color: #ec4899;
+}
+
+/* ─── Pink accent text ───────────────────────────── */
+
+.text-pink {
+    color: #ec4899;
+}
+
+.text-pink-bold {
+    color: #ec4899;
+    font-weight: 700;
+}
+
+/* ─── Hoverable card (for Server Components) ─── */
+
+.card-hover {
+    background: rgba(255, 255, 255, 0.85);
+    border: 2px solid #f9a8d4;
+    border-radius: 16px;
+    padding: 2rem;
+    backdrop-filter: blur(8px);
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+    cursor: pointer;
+}
+
+.card-hover:hover {
+    border-color: #ec4899;
+    box-shadow: 0 4px 16px rgba(236, 72, 153, 0.15);
+    transform: translateY(-2px);
+}
+
+/* ─── My Products Feature ────────────────────────── */
+
+.add-product-section {
+    background: rgba(255, 255, 255, 0.85);
+    border: 2px solid #f9a8d4;
+    border-radius: 16px;
+    padding: 1.5rem;
+    backdrop-filter: blur(8px);
+}
+
+.search-results-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.search-result-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1.5px solid #f9a8d4;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+    text-align: left;
+    font: inherit;
+}
+
+.search-result-card:hover:not(:disabled) {
+    border-color: #ec4899;
+    background: #fff;
+    box-shadow: 0 2px 12px rgba(244, 114, 182, 0.15);
+    transform: translateY(-1px);
+}
+
+.search-result-card:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ── Two-column layout ─────────────────────────────── */
+
+.my-products-layout {
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+}
+
+.my-products-col-left {
+    flex: 1;
+    min-width: 0;
+}
+
+.my-products-col-right {
+    flex: 1;
+    min-width: 0;
+    position: sticky;
+    top: 1rem;
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #f9a8d4 transparent;
+}
+
+.my-products-col-right::-webkit-scrollbar {
+    width: 5px;
+}
+
+.my-products-col-right::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.my-products-col-right::-webkit-scrollbar-thumb {
+    background: #f9a8d4;
+    border-radius: 999px;
+}
+
+.my-products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 0.75rem;
+}
+
+.my-product-card {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1.5px solid #f9a8d4;
+    border-radius: 14px;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.my-product-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(244, 114, 182, 0.15);
+}
+
+.product-badge {
+    display: inline-block;
+    padding: 0.125rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.badge-catalog {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.badge-custom {
+    background: #fce7f3;
+    color: #be185d;
+}
+
+.product-tag {
+    display: inline-block;
+    padding: 0.0625rem 0.375rem;
+    border-radius: 6px;
+    font-size: 0.625rem;
+    font-weight: 600;
+    background: #fce7f3;
+    color: #9d174d;
+    text-transform: capitalize;
+}
+
+.remove-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 1.5px solid #e5e7eb;
+    background: rgba(255, 255, 255, 0.8);
+    color: #9ca3af;
+    font-size: 0.75rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+    line-height: 1;
+}
+
+.remove-btn:hover:not(:disabled) {
+    border-color: #ef4444;
+    color: #ef4444;
+    background: #fef2f2;
+}
+
+.remove-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.custom-product-form {
+    background: rgba(255, 255, 255, 0.6);
+    border: 1.5px solid #f9a8d4;
+    border-radius: 14px;
+    padding: 1.25rem;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+}
+
+@media (max-width: 768px) {
+    .my-products-layout {
+        flex-direction: column;
+    }
+
+    .my-products-col-right {
+        width: 100%;
+        position: static;
+        max-height: none;
+        order: -1;
+    }
+}
+
+@media (max-width: 480px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .my-products-grid {
+        grid-template-columns: 1fr;
+    }
 }
