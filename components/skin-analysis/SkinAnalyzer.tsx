@@ -3,19 +3,17 @@
 import { useState, useRef, useCallback } from "react";
 import { analyzeSkin } from "@/lib/analysis/skin-analyzer";
 import type { SkinAnalysisResult } from "@/lib/analysis/skin-analyzer";
-import AnalysisResults from "./AnalysisResults";
 import CameraCapture from "./CameraCapture";
 
 type Status = "idle" | "loading-model" | "analyzing" | "done" | "error";
 
 interface Props {
-    onRecommend: (result: SkinAnalysisResult) => void;
+    onAnalysisComplete: (result: SkinAnalysisResult, previewUrl: string) => void;
 }
 
-export default function SkinAnalyzer({ onRecommend }: Props) {
+export default function SkinAnalyzer({ onAnalysisComplete }: Props) {
     const [status, setStatus] = useState<Status>("idle");
     const [error, setError] = useState<string | null>(null);
-    const [result, setResult] = useState<SkinAnalysisResult | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [isDragging, setIsDragging] = useState(false);
     const [showCamera, setShowCamera] = useState(false);
@@ -29,7 +27,6 @@ export default function SkinAnalyzer({ onRecommend }: Props) {
             return;
         }
         setError(null);
-        setResult(null);
         setStatus("idle");
         setShowCamera(false);
         const url = URL.createObjectURL(file);
@@ -60,24 +57,23 @@ export default function SkinAnalyzer({ onRecommend }: Props) {
     );
 
     const runAnalysis = useCallback(async () => {
-        if (!imgRef.current) return;
+        if (!imgRef.current || !previewUrl) return;
         try {
             setError(null);
-            setResult(null);
             setStatus("loading-model");
             const analysisResult = await analyzeSkin(imgRef.current);
-            setResult(analysisResult);
             setStatus("done");
+            // Navigate to results step
+            onAnalysisComplete(analysisResult, previewUrl);
         } catch (err) {
             setError(err instanceof Error ? err.message : "An unexpected error occurred.");
             setStatus("error");
         }
-    }, []);
+    }, [previewUrl, onAnalysisComplete]);
 
     const reset = useCallback(() => {
         setStatus("idle");
         setError(null);
-        setResult(null);
         setShowCamera(false);
         if (previewUrl) URL.revokeObjectURL(previewUrl);
         setPreviewUrl(null);
@@ -172,42 +168,32 @@ export default function SkinAnalyzer({ onRecommend }: Props) {
                             crossOrigin="anonymous"
                         />
                         <div style={{ display: "flex", gap: "0.75rem", width: "100%", justifyContent: "center" }}>
-                            {status !== "done" && (
-                                <button
-                                    className="btn btn-primary"
-                                    onClick={runAnalysis}
-                                    disabled={isProcessing}
-                                    style={{ minWidth: "160px", borderRadius: "999px" }}
-                                >
-                                    {isProcessing ? (
-                                        <span style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
-                                            <Spinner />
-                                            {status === "loading-model" ? "Loading model…" : "Analyzing…"}
-                                        </span>
-                                    ) : "Analyze Skin Tone"}
-                                </button>
-                            )}
+                            <button
+                                className="btn btn-primary"
+                                onClick={runAnalysis}
+                                disabled={isProcessing}
+                                style={{ minWidth: "160px", borderRadius: "999px" }}
+                            >
+                                {isProcessing ? (
+                                    <span style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
+                                        <Spinner />
+                                        {status === "loading-model" ? "Loading…" : "Analyzing…"}
+                                    </span>
+                                ) : "Analyze Skin Tone"}
+                            </button>
                             <button
                                 className="btn btn-pink"
                                 onClick={reset}
                                 disabled={isProcessing}
                                 style={{ borderRadius: "999px" }}
                             >
-                                {status === "done" ? "Upload New Photo" : "Remove"}
+                                Remove
                             </button>
                         </div>
                     </div>
 
                     {error && (
                         <div className="error-message" style={{ marginTop: "1rem" }}>{error}</div>
-                    )}
-
-                    {result && previewUrl && (
-                        <AnalysisResults
-                            result={result}
-                            imageUrl={previewUrl}
-                            onProceed={() => onRecommend(result)}
-                        />
                     )}
                 </div>
             )}

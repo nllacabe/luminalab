@@ -19,5 +19,5 @@ export default async function SurveyPage() {
     const brands = getBrandsFromCSV();
     const prefs = await getUserPreferences();
 
-    return <SurveyPageClient brands={brands} initialPrefs={prefs} />;
+    return <SurveyPageClient brands={brands} initialPrefs={prefs} userEmail={user.email ?? ""} />;
 }

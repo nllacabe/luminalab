@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { logout } from "@/app/(auth)/actions";
+import Header from "@/components/layout/Header";
 import UserPreferenceSurvey from "@/components/survey/UserPreferenceSurvey";
 import type { UserPreferences } from "@/app/survey/actions";
 import type { UserProduct } from "@/lib/products/types";
@@ -85,35 +85,7 @@ export default function DashboardClient({ userEmail, showSurvey, brands, prefs, 
             <Sparkle top="45%" left="2%" size={12} delay={0.6} />
             <Sparkle top="50%" right="3%" size={16} delay={0.9} />
 
-            {/* Logo */}
-            <div className="logo-header">
-                <Link href="/dashboard">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src="/logo.png" alt="LUMINALAB" style={{ height: "44px" }} />
-                </Link>
-            </div>
-
-            {/* Nav */}
-            <div className="pink-nav" style={{
-                flexWrap: "wrap",
-                gap: "0.5rem",
-            }}>
-                <div style={{ display: "flex", gap: isMobile ? "1rem" : "1.5rem", flexWrap: "wrap" }}>
-                    <Link href="/assessment" style={navLinkStyle}>Analyze</Link>
-                    <Link href="/my-products" style={navLinkStyle}>My Products</Link>
-                    <Link href="/survey" style={navLinkStyle}>Preferences</Link>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
-                    {!isMobile && (
-                        <span style={{ fontSize: "0.8125rem", color: "#9ca3af" }}>{userEmail}</span>
-                    )}
-                    <form action={logout}>
-                        <button type="submit" className="btn btn-ghost" style={{ fontSize: "0.875rem" }}>
-                            Sign Out
-                        </button>
-                    </form>
-                </div>
-            </div>
+            <Header isLoggedIn />
 
             <main style={{ flex: 1, padding: isMobile ? "1.25rem" : "2rem", position: "relative", zIndex: 1 }}>
                 <div style={{ maxWidth: "960px", margin: "0 auto" }}>
@@ -488,11 +460,4 @@ const pinkOutlineBtnStyle: React.CSSProperties = {
     color: "#ec4899",
     cursor: "pointer",
     transition: "background 0.15s",
-};
-
-const navLinkStyle: React.CSSProperties = {
-    fontSize: "0.875rem",
-    color: "#6b7280",
-    textDecoration: "none",
-    fontWeight: 500,
 };

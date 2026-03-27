@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import Header from "@/components/layout/Header";
 
 export const metadata: Metadata = {
   title: "LUMINALAB",
@@ -16,25 +17,7 @@ export default function HomePage() {
       <Sparkle top="55%" left="5%" size={12} delay={0.6} />
       <Sparkle top="60%" right="6%" size={16} delay={0.9} />
 
-      {/* Logo header — centered */}
-      <div className="logo-header" style={{ justifyContent: "center" }}>
-        <Link href="/">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.png" alt="LUMINALAB" style={{ height: "44px" }} />
-        </Link>
-      </div>
-
-      {/* Nav */}
-      <div className="pink-nav" style={{ justifyContent: "flex-end" }}>
-        <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
-          <Link href="/login" className="btn btn-ghost" style={{ fontSize: "0.9375rem" }}>
-            Sign In
-          </Link>
-          <Link href="/signup" className="btn btn-primary" style={{ fontSize: "0.9375rem" }}>
-            Get Started
-          </Link>
-        </div>
-      </div>
+      <Header isLoggedIn={false} />
 
       {/* Hero — two column layout */}
       <main style={{

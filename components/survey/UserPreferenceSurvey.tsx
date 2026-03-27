@@ -4,11 +4,24 @@ import { useState, useTransition } from "react";
 import { savePreferences, UserPreferences } from "@/app/survey/actions";
 import { OCCASIONS, OCCASION_INTENT_MAP } from "@/lib/recommendations/occasion-config";
 import type { OccasionKey } from "@/lib/recommendations/occasion-config";
+import {
+    X,
+    Briefcase,
+    Heart,
+    PartyPopper,
+    Crown,
+    CircleDot,
+    Sun,
+    Rabbit,
+    Leaf,
+    MapPin,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 interface Props {
     brands: string[];
     initialPrefs?: UserPreferences | null;
-    /** Called after successful save or skip */
+    /** Called after successful save, skip, or close */
     onComplete?: () => void;
     /** Is this shown as a modal overlay? */
     isOverlay?: boolean;
@@ -36,7 +49,19 @@ const FINISHES = [
     { id: "glossy", label: "Glossy" },
 ];
 
+// Lucide icon name → component mapping for occasions
+const OCCASION_ICONS: Record<string, LucideIcon> = {
+    Briefcase,
+    Heart,
+    PartyPopper,
+    Crown,
+    CircleDot,
+    Sun,
+};
+
 export default function UserPreferenceSurvey({ brands, initialPrefs, onComplete, isOverlay }: Props) {
+    const isEditing = !!initialPrefs;
+
     const [budgetMin, setBudgetMin] = useState(initialPrefs?.budget_min ?? 0);
     const [budgetMax, setBudgetMax] = useState(initialPrefs?.budget_max ?? 2500);
     const [selectedBrands, setSelectedBrands] = useState<string[]>(initialPrefs?.preferred_brands ?? []);
@@ -52,6 +77,14 @@ export default function UserPreferenceSurvey({ brands, initialPrefs, onComplete,
 
     function toggle<T>(arr: T[], val: T): T[] {
         return arr.includes(val) ? arr.filter(v => v !== val) : [...arr, val];
+    }
+
+    // Clamp min/max when either thumb moves
+    function handleRangeMin(val: number) {
+        setBudgetMin(Math.min(val, budgetMax - 50));
+    }
+    function handleRangeMax(val: number) {
+        setBudgetMax(Math.max(val, budgetMin + 50));
     }
 
     function handleFinish() {
@@ -76,9 +109,13 @@ export default function UserPreferenceSurvey({ brands, initialPrefs, onComplete,
         });
     }
 
-    function handleSkip() {
+    function handleSkipOrCancel() {
         onComplete?.();
     }
+
+    // Budget bar fill percentage
+    const minPct = (budgetMin / 5000) * 100;
+    const maxPct = (budgetMax / 5000) * 100;
 
     const inner = (
         <div style={{
@@ -87,7 +124,7 @@ export default function UserPreferenceSurvey({ brands, initialPrefs, onComplete,
             border: "2px solid #f9a8d4",
             boxShadow: "0 8px 40px rgba(236,72,153,0.12)",
             width: "100%",
-            maxWidth: "680px",
+            maxWidth: "780px",
             maxHeight: isOverlay ? "85vh" : undefined,
             display: "flex",
             flexDirection: "column",
@@ -95,13 +132,43 @@ export default function UserPreferenceSurvey({ brands, initialPrefs, onComplete,
             position: "relative",
             overflow: "hidden",
         }}>
-            {/* Header */}
+            {/* Header with X close button */}
             <div style={{
                 padding: "2rem 2rem 1rem",
                 borderBottom: "1px solid #fce7f3",
                 flexShrink: 0,
                 textAlign: "center",
+                position: "relative",
             }}>
+                <button
+                    onClick={handleSkipOrCancel}
+                    style={{
+                        position: "absolute",
+                        top: "1rem",
+                        right: "1rem",
+                        background: "none",
+                        border: "none",
+                        cursor: "pointer",
+                        color: "#9ca3af",
+                        padding: "0.25rem",
+                        borderRadius: "8px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        transition: "color 0.15s, background 0.15s",
+                    }}
+                    onMouseEnter={e => {
+                        e.currentTarget.style.color = "#ec4899";
+                        e.currentTarget.style.background = "#fce7f3";
+                    }}
+                    onMouseLeave={e => {
+                        e.currentTarget.style.color = "#9ca3af";
+                        e.currentTarget.style.background = "none";
+                    }}
+                    aria-label="Close"
+                >
+                    <X size={20} />
+                </button>
                 <h2 style={{
                     fontSize: "1.35rem",
                     fontWeight: 700,
@@ -122,45 +189,58 @@ export default function UserPreferenceSurvey({ brands, initialPrefs, onComplete,
                 gap: "1.75rem",
             }}>
 
-                {/* Q1 — Budget */}
+                {/* Q1 — Budget (single dual-thumb range) */}
                 <section>
                     <QuestionLabel num={1} text="What is your typical budget for makeup products?" />
                     <div style={{ marginTop: "1rem" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.4rem" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
                             <span style={labelSm}>PHP {budgetMin.toLocaleString()}</span>
                             <span style={labelSm}>PHP {budgetMax.toLocaleString()}</span>
                         </div>
-                        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                                <span style={{ ...labelSm, minWidth: 30 }}>Min</span>
-                                <input
-                                    type="range"
-                                    min={0}
-                                    max={5000}
-                                    step={50}
-                                    value={budgetMin}
-                                    onChange={e => {
-                                        const v = Number(e.target.value);
-                                        setBudgetMin(Math.min(v, budgetMax - 50));
-                                    }}
-                                    style={rangeStyle}
-                                />
-                            </div>
-                            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                                <span style={{ ...labelSm, minWidth: 30 }}>Max</span>
-                                <input
-                                    type="range"
-                                    min={0}
-                                    max={5000}
-                                    step={50}
-                                    value={budgetMax}
-                                    onChange={e => {
-                                        const v = Number(e.target.value);
-                                        setBudgetMax(Math.max(v, budgetMin + 50));
-                                    }}
-                                    style={rangeStyle}
-                                />
-                            </div>
+                        {/* Dual-thumb range slider */}
+                        <div style={{ position: "relative", height: "24px" }}>
+                            {/* Track background */}
+                            <div style={{
+                                position: "absolute",
+                                top: "50%",
+                                left: 0,
+                                right: 0,
+                                height: "6px",
+                                background: "#fce7f3",
+                                borderRadius: "3px",
+                                transform: "translateY(-50%)",
+                            }} />
+                            {/* Active range fill */}
+                            <div style={{
+                                position: "absolute",
+                                top: "50%",
+                                left: `${minPct}%`,
+                                width: `${maxPct - minPct}%`,
+                                height: "6px",
+                                background: "#ec4899",
+                                borderRadius: "3px",
+                                transform: "translateY(-50%)",
+                            }} />
+                            {/* Min thumb */}
+                            <input
+                                type="range"
+                                min={0}
+                                max={5000}
+                                step={50}
+                                value={budgetMin}
+                                onChange={e => handleRangeMin(Number(e.target.value))}
+                                style={dualRangeInput}
+                            />
+                            {/* Max thumb */}
+                            <input
+                                type="range"
+                                min={0}
+                                max={5000}
+                                step={50}
+                                value={budgetMax}
+                                onChange={e => handleRangeMax(Number(e.target.value))}
+                                style={dualRangeInput}
+                            />
                         </div>
                         <p style={{ ...labelSm, marginTop: "0.5rem", color: "#ec4899", fontWeight: 600 }}>
                             Range: PHP {budgetMin.toLocaleString()} – PHP {budgetMax.toLocaleString()}
@@ -226,6 +306,7 @@ export default function UserPreferenceSurvey({ brands, initialPrefs, onComplete,
                         {OCCASIONS.map(key => {
                             const intent = OCCASION_INTENT_MAP[key];
                             const isSelected = occasion === key;
+                            const IconComp = OCCASION_ICONS[intent.icon];
                             return (
                                 <button
                                     key={key}
@@ -251,7 +332,13 @@ export default function UserPreferenceSurvey({ brands, initialPrefs, onComplete,
                                         transform: isSelected ? "scale(1.02)" : "scale(1)",
                                     }}
                                 >
-                                    <span style={{ fontSize: "1.35rem", lineHeight: 1 }}>{intent.icon}</span>
+                                    {IconComp && (
+                                        <IconComp
+                                            size={22}
+                                            color={isSelected ? "#be185d" : "#9ca3af"}
+                                            strokeWidth={2}
+                                        />
+                                    )}
                                     <span style={{
                                         fontWeight: 700,
                                         fontSize: "0.8rem",
@@ -299,22 +386,25 @@ export default function UserPreferenceSurvey({ brands, initialPrefs, onComplete,
 
                 <Divider />
 
-                {/* Q6 — Values */}
+                {/* Q6 — Values (Lucide icons instead of emojis) */}
                 <section>
                     <QuestionLabel num={6} text="What values matter most to you?" italic="(Multiple selection)" />
                     <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginTop: "0.75rem" }}>
                         <CheckboxItem
-                            label="🐰 Cruelty-free"
+                            label="Cruelty-free"
+                            icon={<Rabbit size={16} />}
                             checked={isCrueltyFree}
                             onChange={() => setIsCrueltyFree(v => !v)}
                         />
                         <CheckboxItem
-                            label="🌱 Vegan"
+                            label="Vegan"
+                            icon={<Leaf size={16} />}
                             checked={isVegan}
                             onChange={() => setIsVegan(v => !v)}
                         />
                         <CheckboxItem
-                            label="🇵🇭 Support local brands"
+                            label="Support local brands"
+                            icon={<MapPin size={16} />}
                             checked={prefersLocal}
                             onChange={() => setPrefersLocal(v => !v)}
                         />
@@ -345,12 +435,12 @@ export default function UserPreferenceSurvey({ brands, initialPrefs, onComplete,
 
                 {error && (
                     <p style={{ color: "#ef4444", fontSize: "0.875rem", textAlign: "center" }}>
-                        ⚠️ {error}
+                        {error}
                     </p>
                 )}
             </div>
 
-            {/* Sticky footer buttons */}
+            {/* Sticky footer buttons — dynamic based on editing vs first-time */}
             <div style={{
                 borderTop: "1px solid #fce7f3",
                 padding: "1.25rem 2rem",
@@ -361,28 +451,18 @@ export default function UserPreferenceSurvey({ brands, initialPrefs, onComplete,
                 background: "rgba(255,255,255,0.95)",
             }}>
                 <button
-                    onClick={handleSkip}
+                    onClick={handleSkipOrCancel}
                     disabled={isPending}
-                    style={skipBtnStyle}
-                    onMouseEnter={e => {
-                        (e.currentTarget as HTMLButtonElement).style.background = "#fce7f3";
-                    }}
-                    onMouseLeave={e => {
-                        (e.currentTarget as HTMLButtonElement).style.background = "transparent";
-                    }}
+                    className="btn btn-signin"
+                    style={{ borderRadius: "999px" }}
                 >
-                    Skip for Now
+                    {isEditing ? "Cancel" : "Skip for Now"}
                 </button>
                 <button
                     onClick={handleFinish}
                     disabled={isPending}
-                    style={finishBtnStyle}
-                    onMouseEnter={e => {
-                        (e.currentTarget as HTMLButtonElement).style.background = "#db2777";
-                    }}
-                    onMouseLeave={e => {
-                        (e.currentTarget as HTMLButtonElement).style.background = "#ec4899";
-                    }}
+                    className="btn btn-primary"
+                    style={{ borderRadius: "999px", padding: "0.6rem 1.75rem" }}
                 >
                     {isPending ? "Saving…" : "Finish"}
                 </button>
@@ -431,7 +511,9 @@ function QuestionLabel({ num, text, italic }: { num: number; text: string; itali
     );
 }
 
-function CheckboxItem({ label, checked, onChange }: { label: string; checked: boolean; onChange: () => void }) {
+function CheckboxItem({ label, checked, onChange, icon }: {
+    label: string; checked: boolean; onChange: () => void; icon?: React.ReactNode;
+}) {
     return (
         <label style={{
             display: "flex",
@@ -463,6 +545,7 @@ function CheckboxItem({ label, checked, onChange }: { label: string; checked: bo
                 )}
             </div>
             <input type="checkbox" checked={checked} onChange={onChange} style={{ display: "none" }} />
+            {icon && <span style={{ color: checked ? "#ec4899" : "#9ca3af", display: "flex", alignItems: "center" }}>{icon}</span>}
             <span style={{ fontSize: "0.875rem", color: "#374151" }}>{label}</span>
         </label>
     );
@@ -514,33 +597,18 @@ const labelSm: React.CSSProperties = {
     fontWeight: 500,
 };
 
-const rangeStyle: React.CSSProperties = {
-    flex: 1,
-    accentColor: "#ec4899",
-    cursor: "pointer",
-    height: "4px",
-};
-
-const skipBtnStyle: React.CSSProperties = {
-    padding: "0.6rem 1.75rem",
-    borderRadius: "999px",
-    border: "1.5px solid #ec4899",
+// Dual-range input — overlaid transparent sliders
+const dualRangeInput: React.CSSProperties = {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    appearance: "none",
+    WebkitAppearance: "none",
     background: "transparent",
-    color: "#ec4899",
-    fontWeight: 600,
-    fontSize: "0.9rem",
+    pointerEvents: "none",
     cursor: "pointer",
-    transition: "background 0.15s",
-};
-
-const finishBtnStyle: React.CSSProperties = {
-    padding: "0.6rem 1.75rem",
-    borderRadius: "999px",
-    border: "none",
-    background: "#ec4899",
-    color: "white",
-    fontWeight: 600,
-    fontSize: "0.9rem",
-    cursor: "pointer",
-    transition: "background 0.15s",
+    margin: 0,
+    padding: 0,
 };

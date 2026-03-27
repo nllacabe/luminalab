@@ -93,3 +93,39 @@ export async function hasCompletedSurvey(): Promise<boolean> {
 
     return !error && !!data;
 }
+
+export async function requestPasswordReset() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user?.email) {
+        return { error: "No email found for current user." };
+    }
+
+    const { error } = await supabase.auth.resetPasswordForEmail(user.email);
+
+    if (error) {
+        return { error: error.message };
+    }
+
+    return { success: true };
+}
+
+export async function deleteAccount() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+        return { error: "Not authenticated." };
+    }
+
+    // Delete user preferences first
+    await supabase.from("user_preferences").delete().eq("user_id", user.id);
+    // Delete user products
+    await supabase.from("user_products").delete().eq("user_id", user.id);
+
+    // Sign out the user (actual account deletion requires admin API or Supabase dashboard)
+    await supabase.auth.signOut();
+
+    redirect("/");
+}

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import MyProductsClient from "@/components/products/MyProductsClient";
+import Header from "@/components/layout/Header";
 
 export const metadata: Metadata = {
     title: "My Products — LUMINALAB",
@@ -19,18 +19,7 @@ export default function MyProductsPage() {
             <Sparkle top="85%" left="4%" size={14} delay={1.2} />
             <Sparkle top="90%" right="6%" size={10} delay={0.5} />
 
-            {/* Logo + nav */}
-            <div className="logo-header">
-                <Link href="/dashboard">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src="/logo.png" alt="LUMINALAB" style={{ height: "44px" }} />
-                </Link>
-            </div>
-            <div className="pink-nav" style={{ justifyContent: "flex-end" }}>
-                <Link href="/dashboard" className="btn btn-ghost" style={{ fontSize: "0.875rem" }}>
-                    ← Dashboard
-                </Link>
-            </div>
+            <Header isLoggedIn />
 
             {/* Page content */}
             <main style={{ flex: 1, padding: "1rem 1.5rem 2rem", position: "relative", zIndex: 1 }}>

@@ -40,7 +40,7 @@ export const OCCASION_INTENT_MAP: Record<OccasionKey, OccasionIntent> = {
         chroma_bias: "medium",
         avoid_hues: ["bright-red", "orange", "coral"],
         label: "Job Interview",
-        icon: "💼",
+        icon: "Briefcase",
         descriptor: "Polished & professional",
     },
     date_night: {
@@ -49,7 +49,7 @@ export const OCCASION_INTENT_MAP: Record<OccasionKey, OccasionIntent> = {
         chroma_bias: "high",
         avoid_hues: ["nude", "greige", "cool-taupe"],
         label: "Date Night",
-        icon: "🌹",
+        icon: "Heart",
         descriptor: "Bold & romantic",
     },
     party: {
@@ -58,7 +58,7 @@ export const OCCASION_INTENT_MAP: Record<OccasionKey, OccasionIntent> = {
         chroma_bias: "high",
         avoid_hues: [],
         label: "Party / Social",
-        icon: "🎉",
+        icon: "PartyPopper",
         descriptor: "Vibrant & expressive",
     },
     formal_gala: {
@@ -67,7 +67,7 @@ export const OCCASION_INTENT_MAP: Record<OccasionKey, OccasionIntent> = {
         chroma_bias: "medium",
         avoid_hues: ["bright-coral", "orange"],
         label: "Formal / Gala",
-        icon: "👔",
+        icon: "Crown",
         descriptor: "Elegant & refined",
     },
     solemn: {
@@ -76,7 +76,7 @@ export const OCCASION_INTENT_MAP: Record<OccasionKey, OccasionIntent> = {
         chroma_bias: "low",
         avoid_hues: ["red", "coral", "fuchsia", "bright-pink", "orange"],
         label: "Solemn",
-        icon: "🖤",
+        icon: "CircleDot",
         descriptor: "Understated & respectful",
     },
     everyday: {
@@ -85,7 +85,7 @@ export const OCCASION_INTENT_MAP: Record<OccasionKey, OccasionIntent> = {
         chroma_bias: "medium",
         avoid_hues: [],
         label: "Everyday / Casual",
-        icon: "☀️",
+        icon: "Sun",
         descriptor: "Effortless & versatile",
     },
 };

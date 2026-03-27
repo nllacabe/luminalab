@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { login } from "@/app/(auth)/actions";
-import GoogleButton from "./google-button";
 import Link from "next/link";
 
 export default function LoginForm() {
@@ -34,9 +33,7 @@ export default function LoginForm() {
                 </p>
             </div>
 
-            <GoogleButton label="Sign in with Google" />
 
-            <div className="divider">OR</div>
 
             <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                 {error && <div className="error-message">{error}</div>}

@@ -103,7 +103,81 @@ body {
     animation: sparkle-pulse 2s ease-in-out infinite;
 }
 
-/* ─── LUMINALAB Logo header ──────────────────────── */
+/* ─── Site Header (unified) ──────────────────────── */
+
+.site-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.875rem 2rem;
+    position: relative;
+    z-index: 10;
+    gap: 1rem;
+}
+
+.site-header-logo img {
+    height: 40px;
+    width: auto;
+    object-fit: contain;
+    display: block;
+}
+
+.site-header-nav {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+.site-header-link {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: #6b7280;
+    text-decoration: none;
+    padding: 0.25rem 0;
+    transition: color 0.2s;
+}
+
+.site-header-link:hover {
+    color: var(--primary);
+}
+
+.site-header-link.active {
+    color: var(--primary);
+    font-weight: 700;
+}
+
+.site-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+/* Sign In button — outline style matching "Create Account & Save Results" */
+.btn-signin {
+    background: transparent;
+    border: 2px solid var(--primary);
+    color: var(--primary);
+    font-weight: 600;
+    border-radius: 10px;
+    padding: 0.5rem 1.25rem;
+    font-size: 0.9375rem;
+}
+
+.btn-signin:hover {
+    background: rgba(236, 72, 153, 0.06);
+    box-shadow: 0 2px 12px rgba(236, 72, 153, 0.2);
+    transform: translateY(-1px);
+}
+
+/* Get Started solid button */
+.btn-get-started {
+    border-radius: 10px;
+    padding: 0.5rem 1.25rem;
+    font-weight: 600;
+    font-size: 0.9375rem;
+}
+
+/* ─── Legacy header classes (kept for compat) ─────── */
 
 .logo-header {
     display: flex;
@@ -175,8 +249,13 @@ body {
     font-weight: 500;
     line-height: 1.5;
     cursor: pointer;
-    transition: background-color 0.2s, transform 0.1s, box-shadow 0.2s;
+    transition: background-color 0.2s, transform 0.15s, box-shadow 0.2s;
     text-decoration: none;
+}
+
+.btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 12px rgba(236, 72, 153, 0.18);
 }
 
 .btn:active {
@@ -682,5 +761,61 @@ body {
 
     .my-products-grid {
         grid-template-columns: 1fr;
+    }
+}
+
+/* ─── Dual-range slider thumbs ───────────────────── */
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #ec4899;
+    border: 2px solid #fff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+    pointer-events: auto;
+    cursor: pointer;
+    position: relative;
+    z-index: 2;
+}
+
+input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #ec4899;
+    border: 2px solid #fff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+    height: 6px;
+    background: transparent;
+}
+
+input[type="range"]::-moz-range-track {
+    height: 6px;
+    background: transparent;
+}
+
+/* ─── Mobile header responsiveness ───────────────── */
+
+@media (max-width: 640px) {
+    .site-header {
+        padding: 0.75rem 1rem;
+        flex-wrap: wrap;
+    }
+
+    .site-header-nav {
+        gap: 1rem;
+        order: 3;
+        width: 100%;
+        justify-content: center;
+        padding-top: 0.5rem;
+        border-top: 1px solid #fce7f3;
     }
 }

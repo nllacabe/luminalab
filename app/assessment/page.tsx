@@ -1,34 +1,94 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
 import SkinAnalyzer from "@/components/skin-analysis/SkinAnalyzer";
 import Recommendations from "@/components/skin-analysis/Recommendations";
+import AnalysisResults from "@/components/skin-analysis/AnalysisResults";
 import type { SkinAnalysisResult } from "@/lib/analysis/skin-analyzer";
-import Link from "next/link";
+import Header from "@/components/layout/Header";
+
+type Step = "upload" | "results" | "recommendations";
 
 export default function AssessmentPage() {
+    const [step, setStep] = useState<Step>("upload");
     const [result, setResult] = useState<SkinAnalysisResult | null>(null);
+    const [imageUrl, setImageUrl] = useState<string | null>(null);
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-    if (result) {
+    useEffect(() => {
+        const supabase = createClient();
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            setIsLoggedIn(!!session?.user);
+        });
+    }, []);
+
+    if (step === "recommendations" && result) {
         return (
-            <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", backgroundImage: "url('/bg.png')" }}>
-                <div className="logo-header">
-                    <Link href="/">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src="/logo.png" alt="LUMINALAB" style={{ height: "44px" }} />
-                    </Link>
-                </div>
-                <div className="pink-nav" style={{ justifyContent: "flex-end" }}>
-                    <Link href="/dashboard" className="btn btn-ghost" style={{ fontSize: "0.875rem" }}>
-                        Dashboard
-                    </Link>
-                </div>
+            <div className="page-wrapper">
+                <Header isLoggedIn={isLoggedIn} />
                 <div style={{ flex: 1 }}>
                     <Recommendations
                         userLab={result.averageLab}
-                        onBack={() => setResult(null)}
+                        onBack={() => setStep("results")}
                     />
                 </div>
+            </div>
+        );
+    }
+
+    if (step === "results" && result && imageUrl) {
+        return (
+            <div className="page-wrapper">
+                <Sparkle top="5%" left="3%" size={18} delay={0} />
+                <Sparkle top="8%" right="5%" size={14} delay={0.3} />
+                <Sparkle top="45%" left="1%" size={12} delay={0.6} />
+                <Sparkle top="50%" right="2%" size={16} delay={0.9} />
+
+                <Header isLoggedIn={isLoggedIn} />
+
+                <main style={{ flex: 1, padding: "1rem 1.5rem 2rem", position: "relative", zIndex: 1 }}>
+                    <div style={{ maxWidth: "720px", margin: "0 auto" }}>
+                        <div className="animate-fade-in" style={{ textAlign: "center", marginBottom: "1.5rem" }}>
+                            <h1 style={{ fontSize: "1.75rem", fontWeight: 700, marginBottom: "0.5rem", color: "#1f2937" }}>
+                                Analysis Results
+                            </h1>
+                            <p style={{ color: "#6b7280", fontSize: "1rem" }}>
+                                Here are the skin tone regions detected by MediaPipe face landmarks.
+                            </p>
+                        </div>
+                        <div className="animate-fade-in-delay">
+                            <AnalysisResults
+                                result={result}
+                                imageUrl={imageUrl}
+                                onProceed={() => setStep("recommendations")}
+                            />
+                        </div>
+                        <div style={{ textAlign: "center", marginTop: "1.5rem" }}>
+                            <button
+                                className="btn btn-pink underline"
+                                onClick={() => {
+                                    setStep("upload");
+                                    setResult(null);
+                                    setImageUrl(null);
+                                }}
+                            >
+                                ← Upload New Photo
+                            </button>
+                        </div>
+                    </div>
+                </main>
+
+                <footer style={{
+                    padding: "1.5rem 2rem",
+                    textAlign: "center",
+                    fontSize: "0.8125rem",
+                    color: "#9ca3af",
+                    position: "relative",
+                    zIndex: 1,
+                }}>
+                    © {new Date().getFullYear()} LUMINALAB. All rights reserved.
+                </footer>
             </div>
         );
     }
@@ -42,17 +102,7 @@ export default function AssessmentPage() {
             <Sparkle top="85%" left="4%" size={14} delay={1.2} />
             <Sparkle top="90%" right="6%" size={10} delay={0.5} />
 
-            <div className="logo-header">
-                <Link href="/">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src="/logo.png" alt="LUMINALAB" style={{ height: "44px" }} />
-                </Link>
-            </div>
-            <div className="pink-nav" style={{ justifyContent: "flex-end" }}>
-                <Link href="/dashboard" className="btn btn-ghost" style={{ fontSize: "0.875rem" }}>
-                    Dashboard
-                </Link>
-            </div>
+            <Header isLoggedIn={isLoggedIn} />
 
             <main style={{ flex: 1, padding: "1rem 1.5rem 2rem", position: "relative", zIndex: 1 }}>
                 <div style={{ maxWidth: "720px", margin: "0 auto" }}>
@@ -66,7 +116,13 @@ export default function AssessmentPage() {
                         </p>
                     </div>
                     <div className="animate-fade-in-delay">
-                        <SkinAnalyzer onRecommend={setResult} />
+                        <SkinAnalyzer
+                            onAnalysisComplete={(analysisResult, previewUrl) => {
+                                setResult(analysisResult);
+                                setImageUrl(previewUrl);
+                                setStep("results");
+                            }}
+                        />
                     </div>
                 </div>
             </main>
