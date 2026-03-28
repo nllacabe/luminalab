@@ -202,7 +202,14 @@ export default function DashboardClient({ userEmail, showSurvey, brands, prefs, 
                                     />
                                 </div>
                             ) : (
-                                <div style={{ textAlign: "center", padding: "1.25rem 0" }}>
+                                <div style={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    padding: "1.25rem 0",
+                                    height: "80%",
+                                }}>
                                     <p style={{ fontSize: "0.875rem", color: "#9ca3af", marginBottom: "0.75rem" }}>
                                         No preferences set yet.
                                     </p>

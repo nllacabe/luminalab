@@ -59,15 +59,16 @@ export default function SurveyPageClient({ brands, initialPrefs, userEmail }: Pr
                 padding: "2rem 1rem",
                 position: "relative",
                 zIndex: 1,
-                gap: "2rem",
+                gap: "0.2rem",
             }}>
-                <UserPreferenceSurvey
-                    brands={brands}
-                    initialPrefs={initialPrefs}
-                    onComplete={handleComplete}
-                    isOverlay={false}
-                />
-
+                <div className="w-full max-w-780px">
+                    <UserPreferenceSurvey
+                        brands={brands}
+                        initialPrefs={initialPrefs}
+                        onComplete={handleComplete}
+                        isOverlay={false}
+                    />
+                </div>
                 {/* Account section — visually subdued */}
                 <div style={{
                     width: "100%",
@@ -110,7 +111,7 @@ export default function SurveyPageClient({ brands, initialPrefs, userEmail }: Pr
                     {/* Change password */}
                     <button
                         onClick={handleResetPassword}
-                        className="btn btn-signin"
+                        className="btn btn-secondary"
                         style={{
                             width: "100%",
                             borderRadius: "12px",
@@ -143,10 +144,9 @@ export default function SurveyPageClient({ brands, initialPrefs, userEmail }: Pr
                             style={{
                                 width: "100%",
                                 padding: "0.625rem 1.25rem",
-                                background: "transparent",
-                                border: "2px solid #ef4444",
+                                background: "#ef4444",       // red background
                                 borderRadius: "12px",
-                                color: "#ef4444",
+                                color: "#ffffff",            // white text
                                 fontWeight: 600,
                                 fontSize: "0.9rem",
                                 cursor: "pointer",
@@ -157,11 +157,14 @@ export default function SurveyPageClient({ brands, initialPrefs, userEmail }: Pr
                                 gap: "0.5rem",
                             }}
                             onMouseEnter={e => {
-                                e.currentTarget.style.background = "#fef2f2";
+                                e.currentTarget.style.background = "#dc2626"; // darker red on hover
+                                e.currentTarget.style.color = "#ffffff";      // keep text white
                             }}
                             onMouseLeave={e => {
-                                e.currentTarget.style.background = "transparent";
+                                e.currentTarget.style.background = "#ef4444"; // reset to original red
+                                e.currentTarget.style.color = "#ffffff";      // reset to white text
                             }}
+
                         >
                             <Trash2 size={16} />
                             Delete Account

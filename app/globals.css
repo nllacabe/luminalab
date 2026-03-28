@@ -279,8 +279,14 @@ body {
 }
 
 .btn-secondary {
-    background: var(--secondary);
-    color: var(--secondary-foreground);
+    border: 1px solid #ec4899;
+    border-radius: 10px;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: #ec4899;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    background: transparent;
 }
 
 .btn-secondary:hover:not(:disabled) {

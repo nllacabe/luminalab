@@ -62,9 +62,14 @@ export default function AssessmentPage() {
                                 result={result}
                                 imageUrl={imageUrl}
                                 onProceed={() => setStep("recommendations")}
+                                onUploadNew={() => {         // ← add this
+                                    setStep("upload");
+                                    setResult(null);
+                                    setImageUrl(null);
+                                }}
                             />
                         </div>
-                        <div style={{ textAlign: "center", marginTop: "1.5rem" }}>
+                        {/* <div style={{ textAlign: "center", marginTop: "1.5rem" }}>
                             <button
                                 className="btn btn-pink underline"
                                 onClick={() => {
@@ -75,7 +80,7 @@ export default function AssessmentPage() {
                             >
                                 ← Upload New Photo
                             </button>
-                        </div>
+                        </div> */}
                     </div>
                 </main>
 

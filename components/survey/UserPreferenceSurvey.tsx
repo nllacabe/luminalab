@@ -132,6 +132,27 @@ export default function UserPreferenceSurvey({ brands, initialPrefs, onComplete,
             position: "relative",
             overflow: "hidden",
         }}>
+            <style>{`
+            .occasion-option {
+                display: flex;
+                align-items: flex-start;
+                gap: 0.2rem;
+                padding: 0.75rem 0.875rem;
+                border-radius: 12px;
+                cursor: pointer;
+                text-align: left;
+                transition: all 0.15s ease;
+                flex-direction: column;
+            }
+            @media (max-width: 640px) {
+                .occasion-option {
+                    align-items: center;
+                    text-align: center;
+                    gap: 0.375rem;
+                    padding: 0.875rem 0.5rem;
+                }
+            }
+        `}</style>
             {/* Header with X close button */}
             <div style={{
                 padding: "2rem 2rem 1rem",
@@ -312,20 +333,12 @@ export default function UserPreferenceSurvey({ brands, initialPrefs, onComplete,
                                     key={key}
                                     type="button"
                                     onClick={() => setOccasion(key)}
+                                    className="occasion-option"
                                     style={{
-                                        display: "flex",
-                                        flexDirection: "column",
-                                        alignItems: "flex-start",
-                                        gap: "0.2rem",
-                                        padding: "0.75rem 0.875rem",
-                                        borderRadius: "12px",
                                         border: `2px solid ${isSelected ? "#ec4899" : "#f9a8d4"}`,
                                         background: isSelected
                                             ? "linear-gradient(135deg, #fce7f3, #fbcfe8)"
                                             : "rgba(255,255,255,0.7)",
-                                        cursor: "pointer",
-                                        textAlign: "left",
-                                        transition: "all 0.15s ease",
                                         boxShadow: isSelected
                                             ? "0 2px 12px rgba(236,72,153,0.18)"
                                             : "none",
@@ -453,8 +466,7 @@ export default function UserPreferenceSurvey({ brands, initialPrefs, onComplete,
                 <button
                     onClick={handleSkipOrCancel}
                     disabled={isPending}
-                    className="btn btn-signin"
-                    style={{ borderRadius: "999px" }}
+                    className="btn btn-secondary"
                 >
                     {isEditing ? "Cancel" : "Skip for Now"}
                 </button>
@@ -462,7 +474,7 @@ export default function UserPreferenceSurvey({ brands, initialPrefs, onComplete,
                     onClick={handleFinish}
                     disabled={isPending}
                     className="btn btn-primary"
-                    style={{ borderRadius: "999px", padding: "0.6rem 1.75rem" }}
+                    style={{ padding: "0.6rem 1.75rem" }}
                 >
                     {isPending ? "Saving…" : "Finish"}
                 </button>
