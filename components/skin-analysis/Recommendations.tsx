@@ -44,6 +44,7 @@ export default function Recommendations({ userLab, onBack }: RecommendationsProp
     const [csvLoaded, setCsvLoaded] = useState(false);
     const [ownedSet, setOwnedSet] = useState<Set<string>>(new Set());
     const [productTypes, setProductTypes] = useState<string[]>([]);
+    const [preferredBrands, setPreferredBrands] = useState<string[]>([]);
     const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
     useEffect(() => {
@@ -63,10 +64,12 @@ export default function Recommendations({ userLab, onBack }: RecommendationsProp
 
                 const savedOccasion = (prefs?.occasion ?? "everyday") as OccasionKey;
                 const savedTypes = prefs?.product_types ?? [];
+                const savedBrands = prefs?.preferred_brands ?? [];
                 setOccasion(savedOccasion);
                 setProductTypes(savedTypes);
+                setPreferredBrands(savedBrands);
 
-                applyRecommendations(savedOccasion, owned, savedTypes);
+                applyRecommendations(savedOccasion, owned, savedTypes, savedBrands);
             } catch (err) {
                 console.error("Failed to load products:", err);
                 setLoading(false);
@@ -76,11 +79,11 @@ export default function Recommendations({ userLab, onBack }: RecommendationsProp
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [userLab]);
 
-    function applyRecommendations(occ: OccasionKey, owned: Set<string>, types: string[]) {
+    function applyRecommendations(occ: OccasionKey, owned: Set<string>, types: string[], brands: string[]) {
         setLoading(true);
         setVisibleCount(PAGE_SIZE);
         try {
-            const results = getRecommendations(userLab, 20, occ, types);
+            const results = getRecommendations(userLab, 20, occ, types, brands);
             const filtered = results.filter((p) => {
                 const key = `${p.brandName.toLowerCase()}|${p.shadeName.toLowerCase()}|${p.hexColor.toLowerCase()}`;
                 return !owned.has(key);
@@ -95,7 +98,7 @@ export default function Recommendations({ userLab, onBack }: RecommendationsProp
         setOccasion(key);
         setShowOccasionModal(false);
         if (csvLoaded) {
-            applyRecommendations(key, ownedSet, productTypes);
+            applyRecommendations(key, ownedSet, productTypes, preferredBrands);
         }
     }
 

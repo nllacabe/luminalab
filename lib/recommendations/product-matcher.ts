@@ -391,8 +391,15 @@ export function getRecommendations(
     topN = 8,
     occasion: OccasionKey = "everyday",
     productTypes: string[] = [],
+    preferredBrands: string[] = [],
 ): ProductMatch[] {
-    const allProducts = getProducts();
+    let allProducts = getProducts();
+
+    // Filter by preferred brands if any are specified
+    if (preferredBrands.length > 0) {
+        const lowerPreferredBrands = preferredBrands.map(b => b.toLowerCase().trim());
+        allProducts = allProducts.filter(p => lowerPreferredBrands.includes(p.brand_name.toLowerCase().trim()));
+    }
 
     // Filter by user's preferred product types if any are specified
     const products = productTypes.length > 0
