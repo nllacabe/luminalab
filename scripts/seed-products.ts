@@ -238,38 +238,3 @@ async function seed() {
 }
 
 seed().catch(console.error);
-// Convert hex → RGB → CIELAB
-const rgb = hexToRgb(row.hex_color);
-const lab = rgbToLab(rgb.r, rgb.g, rgb.b);
-
-const { error } = await supabase.from("products").insert({
-    brand_id: brandId,
-    name: row.product_name,
-    shade_name: row.shade_name,
-    product_type: row.product_type,
-    finish: row.finish || null,
-    lab_l: lab.l,
-    lab_a: lab.a,
-    lab_b: lab.b,
-    rgb_r: rgb.r,
-    rgb_g: rgb.g,
-    rgb_b: rgb.b,
-    hex_color: row.hex_color,
-    price: row.price ? parseFloat(row.price) : null,
-    product_url: row.product_url || null,
-    image_url: row.image_url || null,
-});
-
-if (error) {
-    console.error(`  ✗ Failed "${row.shade_name}":`, error.message);
-    skipped++;
-} else {
-    console.log(`  + ${row.brand_name} — ${row.product_name} — ${row.shade_name}  (L*=${lab.l}, a*=${lab.a}, b*=${lab.b})`);
-    inserted++;
-}
-    }
-
-console.log(`\n✅ Done! Inserted ${inserted} products, skipped ${skipped}.`);
-}
-
-seed().catch(console.error);
