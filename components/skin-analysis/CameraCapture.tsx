@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import { RefreshCcw, Zap, ZapOff } from "lucide-react";
 
 type LightingLevel = "too-dark" | "moderate" | "good" | "too-bright";
 
@@ -64,15 +65,25 @@ export default function CameraCapture({ onCapture, onCancel }: CameraCaptureProp
     const [cameraReady, setCameraReady] = useState(false);
     const [cameraError, setCameraError] = useState<string | null>(null);
 
+    const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
+    const [hasFlash, setHasFlash] = useState(false);
+    const [flashEnabled, setFlashEnabled] = useState(false);
+
     // ── Start camera ────────────────────────────────────────────────────────
 
     useEffect(() => {
         let cancelled = false;
 
         async function startCamera() {
+            // Stop previous stream if restarting due to facingMode change
+            if (streamRef.current) {
+                streamRef.current.getTracks().forEach((t) => t.stop());
+                setCameraReady(false);
+            }
+
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
+                    video: { facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
                     audio: false,
                 });
 
@@ -82,6 +93,16 @@ export default function CameraCapture({ onCapture, onCancel }: CameraCaptureProp
                 }
 
                 streamRef.current = stream;
+
+                // Check for torch capability
+                const videoTrack = stream.getVideoTracks()[0];
+                const capabilities = videoTrack.getCapabilities ? videoTrack.getCapabilities() : null;
+                if (capabilities && (capabilities as any).torch) {
+                    setHasFlash(true);
+                } else {
+                    setHasFlash(false);
+                    setFlashEnabled(false);
+                }
 
                 if (videoRef.current) {
                     videoRef.current.srcObject = stream;
@@ -101,10 +122,31 @@ export default function CameraCapture({ onCapture, onCancel }: CameraCaptureProp
 
         return () => {
             cancelled = true;
-            stopCamera();
+            if (streamRef.current) {
+                streamRef.current.getTracks().forEach((t) => t.stop());
+                streamRef.current = null;
+            }
+            setCameraReady(false);
+            setFlashEnabled(false);
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [facingMode]);
+
+    const toggleCamera = useCallback(() => {
+        setFacingMode((prev) => (prev === "user" ? "environment" : "user"));
     }, []);
+
+    const toggleFlash = useCallback(async () => {
+        if (!streamRef.current) return;
+        const track = streamRef.current.getVideoTracks()[0];
+        try {
+            await track.applyConstraints({
+                advanced: [{ torch: !flashEnabled } as any]
+            });
+            setFlashEnabled(!flashEnabled);
+        } catch (err) {
+            console.error("Failed to toggle flash", err);
+        }
+    }, [flashEnabled]);
 
     // ── Lighting analysis loop ──────────────────────────────────────────────
 
@@ -174,8 +216,10 @@ export default function CameraCapture({ onCapture, onCancel }: CameraCaptureProp
         if (!ctx) return;
 
         // Mirror horizontally so the captured image matches the mirrored preview
-        ctx.translate(canvas.width, 0);
-        ctx.scale(-1, 1);
+        if (facingMode === "user") {
+            ctx.translate(canvas.width, 0);
+            ctx.scale(-1, 1);
+        }
         ctx.drawImage(video, 0, 0);
 
         canvas.toBlob(
@@ -189,7 +233,7 @@ export default function CameraCapture({ onCapture, onCancel }: CameraCaptureProp
             "image/jpeg",
             0.92
         );
-    }, [onCapture, stopCamera]);
+    }, [onCapture, stopCamera, facingMode]);
 
     const handleCancel = useCallback(() => {
         stopCamera();
@@ -224,7 +268,7 @@ export default function CameraCapture({ onCapture, onCancel }: CameraCaptureProp
     return (
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
             {/* Viewfinder */}
-            <div className="camera-viewfinder">
+            <div className="camera-viewfinder" style={{ position: "relative" }}>
                 <video
                     ref={videoRef}
                     playsInline
@@ -233,9 +277,52 @@ export default function CameraCapture({ onCapture, onCancel }: CameraCaptureProp
                         width: "100%",
                         borderRadius: "calc(var(--radius) + 0.125rem)",
                         display: cameraReady ? "block" : "none",
-                        transform: "scaleX(-1)",
+                        transform: facingMode === "user" ? "scaleX(-1)" : "none",
                     }}
                 />
+
+                {cameraReady && (
+                    <div style={{ position: "absolute", top: "1rem", right: "1rem", display: "flex", gap: "0.5rem", zIndex: 10 }}>
+                        {hasFlash && (
+                            <button
+                                onClick={toggleFlash}
+                                style={{
+                                    background: "rgba(0,0,0,0.5)",
+                                    color: flashEnabled ? "#fbbf24" : "white",
+                                    border: "none",
+                                    borderRadius: "50%",
+                                    width: "44px",
+                                    height: "44px",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    cursor: "pointer",
+                                    backdropFilter: "blur(4px)",
+                                }}
+                            >
+                                {flashEnabled ? <Zap size={20} /> : <ZapOff size={20} />}
+                            </button>
+                        )}
+                        <button
+                            onClick={toggleCamera}
+                            style={{
+                                background: "rgba(0,0,0,0.5)",
+                                color: "white",
+                                border: "none",
+                                borderRadius: "50%",
+                                width: "44px",
+                                height: "44px",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                cursor: "pointer",
+                                backdropFilter: "blur(4px)",
+                            }}
+                        >
+                            <RefreshCcw size={20} />
+                        </button>
+                    </div>
+                )}
 
                 {!cameraReady && (
                     <div
