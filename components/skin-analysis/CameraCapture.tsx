@@ -274,7 +274,7 @@ export default function CameraCapture({ onCapture, onCancel }: CameraCaptureProp
                 >
                     {cameraError}
                 </p>
-                <button className="btn btn-pink" onClick={handleCancel} style={{ borderRadius: "999px" }}>
+                <button className="btn btn-secondary" onClick={handleCancel}>
                     Go Back
                 </button>
             </div>
@@ -283,6 +283,69 @@ export default function CameraCapture({ onCapture, onCancel }: CameraCaptureProp
 
     return (
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            {/* Context Indicators */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                {/* Lighting indicator */}
+                {lighting && (
+                    <div
+                        className="lighting-indicator animate-fade-in"
+                        style={{
+                            borderColor: `color-mix(in srgb, ${lighting.color} 30%, transparent)`,
+                            background: `color-mix(in srgb, ${lighting.color} 8%, var(--card))`,
+                        }}
+                    >
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                            <span
+                                className="lighting-dot"
+                                style={{ background: lighting.color }}
+                            />
+                            <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>
+                                {lighting.label}
+                            </span>
+                        </div>
+                        <p
+                            style={{
+                                fontSize: "0.8125rem",
+                                color: "var(--muted-foreground)",
+                                margin: 0,
+                            }}
+                        >
+                            {lighting.hint}
+                        </p>
+                    </div>
+                )}
+
+                {/* Face count indicator */}
+                {faceCount !== null && faceCount !== 1 && (
+                    <div
+                        className="lighting-indicator animate-fade-in"
+                        style={{
+                            borderColor: `color-mix(in srgb, #d94f4f 30%, transparent)`,
+                            background: `color-mix(in srgb, #d94f4f 8%, var(--card))`,
+                        }}
+                    >
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                            <span
+                                className="lighting-dot"
+                                style={{ background: "#d94f4f" }}
+                            />
+                            <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>
+                                {faceCount === 0 ? "No Face Detected" : "Multiple Faces Detected"}
+                            </span>
+                        </div>
+                        <p
+                            style={{
+                                fontSize: "0.8125rem",
+                                color: "var(--muted-foreground)",
+                                margin: 0,
+                            }}
+                        >
+                            {faceCount === 0 ? "Please make sure your face is in the frame." : "Please make sure only one person is in the frame."}
+                        </p>
+                    </div>
+                )}
+            </div>
+
             {/* Viewfinder */}
             <div className="camera-viewfinder" style={{ position: "relative" }}>
                 <video
@@ -361,69 +424,6 @@ export default function CameraCapture({ onCapture, onCancel }: CameraCaptureProp
             {/* Hidden canvas for brightness sampling */}
             <canvas ref={canvasRef} style={{ display: "none" }} />
 
-            {/* Context Indicators */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                {/* Lighting indicator */}
-                {lighting && (
-                    <div
-                        className="lighting-indicator animate-fade-in"
-                        style={{
-                            borderColor: `color-mix(in srgb, ${lighting.color} 30%, transparent)`,
-                            background: `color-mix(in srgb, ${lighting.color} 8%, var(--card))`,
-                        }}
-                    >
-                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                            <span
-                                className="lighting-dot"
-                                style={{ background: lighting.color }}
-                            />
-                            <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>
-                                {lighting.label}
-                            </span>
-                        </div>
-                        <p
-                            style={{
-                                fontSize: "0.8125rem",
-                                color: "var(--muted-foreground)",
-                                margin: 0,
-                            }}
-                        >
-                            {lighting.hint}
-                        </p>
-                    </div>
-                )}
-                
-                {/* Face count indicator */}
-                {faceCount !== null && faceCount !== 1 && (
-                    <div
-                        className="lighting-indicator animate-fade-in"
-                        style={{
-                            borderColor: `color-mix(in srgb, #d94f4f 30%, transparent)`,
-                            background: `color-mix(in srgb, #d94f4f 8%, var(--card))`,
-                        }}
-                    >
-                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                            <span
-                                className="lighting-dot"
-                                style={{ background: "#d94f4f" }}
-                            />
-                            <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>
-                                {faceCount === 0 ? "No Face Detected" : "Multiple Faces Detected"}
-                            </span>
-                        </div>
-                        <p
-                            style={{
-                                fontSize: "0.8125rem",
-                                color: "var(--muted-foreground)",
-                                margin: 0,
-                            }}
-                        >
-                            {faceCount === 0 ? "Please make sure your face is in the frame." : "Please make sure only one person is in the frame."}
-                        </p>
-                    </div>
-                )}
-            </div>
-
             {/* Actions */}
             {cameraReady && (
                 <div
@@ -441,11 +441,11 @@ export default function CameraCapture({ onCapture, onCancel }: CameraCaptureProp
                             lighting?.level === "too-bright" ||
                             faceCount !== 1
                         }
-                        style={{ minWidth: "160px", borderRadius: "999px" }}
+                        style={{ minWidth: "160px" }}
                     >
                         Take Picture
                     </button>
-                    <button className="btn btn-pink" onClick={handleCancel} style={{ borderRadius: "999px" }}>
+                    <button className="btn btn-secondary" onClick={handleCancel}>
                         Cancel
                     </button>
                 </div>

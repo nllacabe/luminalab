@@ -137,9 +137,9 @@ export default function SkinAnalyzer({ onAnalysisComplete }: Props) {
                         />
                     </div>
                     <button
-                        className="btn btn-pink btn-full"
+                        className="btn btn-primary btn-full"
                         onClick={(e) => { e.stopPropagation(); setShowCamera(true); }}
-                        style={{ borderRadius: "999px", fontSize: "0.9375rem" }}
+                        style={{ fontSize: "0.9375rem" }}
                     >
                         Upload from Camera instead
                     </button>
@@ -172,7 +172,7 @@ export default function SkinAnalyzer({ onAnalysisComplete }: Props) {
                                 className="btn btn-primary"
                                 onClick={runAnalysis}
                                 disabled={isProcessing}
-                                style={{ minWidth: "160px", borderRadius: "999px" }}
+                                style={{ minWidth: "160px" }}
                             >
                                 {isProcessing ? (
                                     <span style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
@@ -182,10 +182,9 @@ export default function SkinAnalyzer({ onAnalysisComplete }: Props) {
                                 ) : "Analyze Skin Tone"}
                             </button>
                             <button
-                                className="btn btn-pink"
+                                className="btn btn-secondary"
                                 onClick={reset}
                                 disabled={isProcessing}
-                                style={{ borderRadius: "999px" }}
                             >
                                 Remove
                             </button>

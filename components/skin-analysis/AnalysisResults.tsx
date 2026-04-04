@@ -1,8 +1,10 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { skinToneLabel } from "@/lib/analysis/color-science";
 import type { SkinAnalysisResult } from "@/lib/analysis/skin-analyzer";
+import { Bold } from "lucide-react";
 
 const REGION_LABELS: Record<string, string> = {
     leftCheek: "Left Cheek",
@@ -48,7 +50,7 @@ export default function AnalysisResults({
                     display: flex;
                     flex-direction: column;
                     align-items: center;
-                    gap: 1.25rem;
+                    gap: 1rem;
                 }
                 .analysis-profile-mobile {
                     display: none;
@@ -73,7 +75,7 @@ export default function AnalysisResults({
                         border-radius: 12px;
                         padding: 1.5rem;
                         background: #fff;
-                        gap: 1.25rem;
+                        gap: 1rem;
                         align-items: center;
                     }
                     .analysis-region-grid {
@@ -192,16 +194,12 @@ export default function AnalysisResults({
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
                     <button
                         onClick={onProceed}
+                        className="btn btn-primary"
                         style={{
                             width: "100%",
                             padding: "0.875rem 1.5rem",
-                            background: "#ec4899",
-                            border: "none",
                             borderRadius: "10px",
                             fontSize: "0.9375rem",
-                            fontWeight: 700,
-                            color: "#fff",
-                            cursor: "pointer",
                             letterSpacing: "0.02em",
                         }}
                     >
@@ -209,17 +207,18 @@ export default function AnalysisResults({
                     </button>
                     <button
                         onClick={onUploadNew}
+                        className="btn btn-secondary"
                         style={{
                             width: "100%",
                             padding: "0.875rem 1.5rem",
-                            background: "white",
-                            border: "2px solid #ec4899",
                             borderRadius: "10px",
                             fontSize: "0.9375rem",
-                            fontWeight: 700,
-                            color: "#ec4899",
-                            cursor: "pointer",
                             letterSpacing: "0.02em",
+                            backgroundColor: "transparent",
+                            background: "rgba(255, 255, 255, 0.1)", // translucent
+                            backdropFilter: "blur(10px)", // blur behind
+                            WebkitBackdropFilter: "blur(10px)", // for Safari
+                            boxShadow: "0 4px 30px rgba(0, 0, 0, 0.1)", // soft shadow
                         }}
                     >
                         Upload new photo
@@ -234,6 +233,24 @@ export default function AnalysisResults({
 // ── Shared profile content ──────────────────────────────────────────────────
 
 function ProfileContent({ result }: { result: SkinAnalysisResult }) {
+    const [showLabInfo, setShowLabInfo] = useState(false);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    // Derive undertone from CIELAB hue angle
+    const getUndertone = (a: number, b: number) => {
+        const hueAngle = (Math.atan2(b, a) * 180) / Math.PI;
+        if (hueAngle < 58) return "cool";
+        if (hueAngle > 66) return "warm";
+        return "neutral";
+    };
+
+    const toneLabel = skinToneLabel(result.skinToneCategory).toLowerCase();
+    const undertoneLabel = getUndertone(result.averageLab.a, result.averageLab.b);
+
     return (
         <>
             <h2 style={{
@@ -247,11 +264,11 @@ function ProfileContent({ result }: { result: SkinAnalysisResult }) {
             </h2>
 
             {/* ITA° category */}
-            <div style={{ textAlign: "center", width: "100%" }}>
+            <div style={{ textAlign: "center", width: "100%", marginBottom: "0.5rem" }}>
                 <h3 style={{ fontWeight: 700, fontSize: "1.125rem", color: "#1f2937", margin: "0 0 0.25rem 0" }}>
                     ITA° Category
                 </h3>
-                <p style={{ fontSize: "0.9375rem", color: "#6b7280", margin: "0 0 0.75rem 0" }}>
+                <p style={{ fontSize: "0.9375rem", color: "#6b7280", margin: "0 0 0.5rem 0" }}>
                     {skinToneLabel(result.skinToneCategory)}
                 </p>
                 <div style={{
@@ -265,16 +282,93 @@ function ProfileContent({ result }: { result: SkinAnalysisResult }) {
             </div>
 
             {/* CIELAB values */}
-            <div style={{ textAlign: "center", width: "100%" }}>
-                <h3 style={{ fontWeight: 700, fontSize: "1.125rem", color: "#1f2937", margin: "0 0 0.75rem 0" }}>
-                    CIELAB Values
-                </h3>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.625rem" }}>
+            <div style={{ textAlign: "center", width: "100%", marginBottom: "0.5rem" }}>
+                <div style={{ marginBottom: "0.75rem" }}>
+                    <h3 style={{ fontWeight: 700, fontSize: "1.125rem", color: "#1f2937", margin: "0 0 0.25rem 0" }}>
+                        CIELAB Values
+                    </h3>
+                    <button
+                        onClick={() => setShowLabInfo(true)}
+                        style={{
+                            background: "none", border: "none", color: "#ec4899",
+                            textDecoration: "underline", fontWeight: "bold it", fontStyle: "italic", fontSize: "0.8125rem",
+                            cursor: "pointer", padding: 0
+                        }}
+                    >
+                        What does this mean?
+                    </button>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.625rem", marginBottom: "0.75rem" }}>
                     <LabValueBox label="L" value={result.averageLab.L.toFixed(2)} />
                     <LabValueBox label="a" value={result.averageLab.a.toFixed(2)} />
                     <LabValueBox label="b" value={result.averageLab.b.toFixed(2)} />
                 </div>
             </div>
+
+            {showLabInfo && mounted && createPortal(
+                <div style={{
+                    position: "fixed",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: "rgba(0,0,0,0.5)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    zIndex: 9999,
+                    padding: "1rem",
+                }} onClick={() => setShowLabInfo(false)}>
+                    <div className="animate-fade-in" style={{
+                        fontSize: "0.875rem",
+                        color: "#4b5563",
+                        textAlign: "left",
+                        background: "#fff",
+                        padding: "1.5rem",
+                        borderRadius: "16px",
+                        border: "1px solid #e5e7eb",
+                        boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+                        maxWidth: "400px",
+                        width: "100%",
+                    }} onClick={e => e.stopPropagation()}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+                            <h4 style={{ margin: 0, color: "#1f2937", fontSize: "1.25rem", fontWeight: 800 }}>CIELAB Color Space</h4>
+                            <button onClick={() => setShowLabInfo(false)} style={{ background: "none", border: "none", fontSize: "1.5rem", cursor: "pointer", color: "#9ca3af", lineHeight: 1 }}>&times;</button>
+                        </div>
+
+                        <div style={{ marginBottom: "1rem" }}>
+                            <p style={{ margin: 0, color: "#374151" }}>
+                                <strong>Why we use this:</strong> CIELAB mathematically maps human color perception. By capturing your precise a* and b* coordinates, we can calculate your exact undertone and find makeup shades that harmonize with your skin perfectly.
+                            </p>
+                        </div>
+
+                        <div style={{ marginBottom: "1rem", paddingTop: "1rem", borderTop: "1px solid #e5e7eb" }}>
+                            {/* <h5 style={{ margin: "0 0 0.5rem 0", color: "#1f2937", fontSize: "0.9375rem" }}>Value Breakdown</h5> */}
+                            <p style={{ margin: "0 0 0.375rem 0" }}><strong>L (Lightness):</strong> 0 (black) to 100 (white)</p>
+                            <p style={{ margin: "0 0 0.375rem 0" }}><strong>a (Green-Red):</strong> Negative is cooler/green, positive is warmer/red</p>
+                            <p style={{ margin: 0 }}><strong>b (Blue-Yellow):</strong> Negative is cooler/blue, positive is warmer/yellow</p>
+                        </div>
+
+                        <div
+                            style={{
+                                margin: 0,
+                                paddingTop: "1rem",
+                                borderTop: "1px solid #e5e7eb",
+                                fontSize: "0.9375rem"
+                            }}
+                        >
+                            <span style={{ color: "#ec4899", fontWeight: "bold" }}>
+                                Interpretation:
+                            </span>{" "}
+                            <span style={{ color: "#374151" }}>
+                                Your values suggest a {toneLabel} tone with {undertoneLabel} undertones.
+                            </span>
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
 
             {/* ITA° angle */}
             <div style={{

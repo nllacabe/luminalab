@@ -154,13 +154,24 @@ body {
 
 /* Sign In button — outline style matching "Create Account & Save Results" */
 .btn-signin {
-    background: transparent;
-    border: 2px solid var(--primary);
-    color: var(--primary);
-    font-weight: 600;
+    border: 1px solid rgba(236, 72, 153, 0.8);
     border-radius: 10px;
-    padding: 0.5rem 1.25rem;
     font-size: 0.9375rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+
+    /* glassmorphism (matches your inline style) */
+    background: transparent;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+
+    /* shadow */
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+
+    color: #ec4899;
+
+    transition: all 0.3s ease;
 }
 
 .btn-signin:hover {
@@ -171,10 +182,8 @@ body {
 
 /* Get Started solid button */
 .btn-get-started {
-    border-radius: 10px;
-    padding: 0.5rem 1.25rem;
-    font-weight: 600;
-    font-size: 0.9375rem;
+    background: var(--primary);
+    color: var(--primary-foreground);
 }
 
 /* ─── Legacy header classes (kept for compat) ─────── */
@@ -278,7 +287,7 @@ body {
     box-shadow: 0 2px 12px rgba(236, 72, 153, 0.3);
 }
 
-.btn-secondary {
+/* .btn-secondary {
     border: 1px solid #ec4899;
     border-radius: 10px;
     font-size: 0.9375rem;
@@ -287,10 +296,42 @@ body {
     cursor: pointer;
     letter-spacing: 0.02em;
     background: transparent;
+    background: "rgba(255, 255, 255, 0.1)", // translucent
+        backdropFilter: "blur(10px)", // blur behind
+        WebkitBackdropFilter: "blur(10px)", // for Safari
+        border: "1px solid rgba(255, 255, 255, 0.2)", // subtle border
+        boxShadow: "0 4px 30px rgba(0, 0, 0, 0.1)", // soft shadow
+} */
+
+.btn-secondary {
+    border-radius: 10px;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+
+    /* glassmorphism (matches your inline style) */
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+
+    /* ✅ keep pink border visible */
+    border: 1px solid rgba(236, 72, 153, 0.8);
+
+    /* shadow */
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+
+    color: #ec4899;
+
+    transition: all 0.3s ease;
 }
 
-.btn-secondary:hover:not(:disabled) {
-    background: var(--secondary-hover);
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(236, 72, 153, 0.4);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.3),
+        0 6px 40px rgba(236, 72, 153, 0.2);
 }
 
 .btn-outline {

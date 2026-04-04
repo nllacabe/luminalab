@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { signup } from "@/app/(auth)/actions";
 import Link from "next/link";
+import { Bold } from "lucide-react";
 
 export default function SignupForm() {
     const [error, setError] = useState<string | null>(null);
@@ -25,8 +26,11 @@ export default function SignupForm() {
     return (
         <div className="card animate-fade-in" style={{ width: "100%", maxWidth: "420px" }}>
             <div style={{ marginBottom: "1.5rem" }}>
-                <h1 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "0.375rem" }}>
-                    Create your account
+                <h1 style={{
+                    fontSize: "2rem", fontWeight: "700",
+                    fontFamily: "var(--font-instrument-serif), serif", marginBottom: "0.375rem", color: "#ec4899"
+                }}>
+                    Create your account!
                 </h1>
                 <p style={{ color: "var(--muted-foreground)", fontSize: "0.9375rem" }}>
                     Save your skin analysis, track products, and get personalized recommendations.
@@ -39,7 +43,7 @@ export default function SignupForm() {
                 {error && <div className="error-message">{error}</div>}
 
                 <div>
-                    <label htmlFor="email" className="label">Email</label>
+                    <label htmlFor="email" className="label" style={{ fontWeight: "600" }}>Email</label>
                     <input
                         id="email"
                         name="email"
@@ -52,7 +56,7 @@ export default function SignupForm() {
                 </div>
 
                 <div>
-                    <label htmlFor="password" className="label">Password</label>
+                    <label htmlFor="password" className="label" style={{ fontWeight: "600" }}>Password</label>
                     <input
                         id="password"
                         name="password"
@@ -66,7 +70,7 @@ export default function SignupForm() {
                 </div>
 
                 <div>
-                    <label htmlFor="confirmPassword" className="label">Confirm Password</label>
+                    <label htmlFor="confirmPassword" className="label" style={{ fontWeight: "600" }}>Confirm Password</label>
                     <input
                         id="confirmPassword"
                         name="confirmPassword"
@@ -86,7 +90,7 @@ export default function SignupForm() {
 
             <p style={{ textAlign: "center", marginTop: "1.25rem", fontSize: "0.875rem", color: "var(--muted-foreground)" }}>
                 Already have an account?{" "}
-                <Link href="/login" style={{ color: "var(--primary)", fontWeight: 500, textDecoration: "none" }}>
+                <Link href="/login" style={{ color: "var(--primary)", fontWeight: "600", textDecoration: "underline" }}>
                     Sign in
                 </Link>
             </p>

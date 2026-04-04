@@ -61,20 +61,27 @@ export default function HomePage() {
           <div
             className="hero-text-card"
             style={{
-              background: "rgba(255,255,255,0.75)",
-              border: "2px solid #f9a8d4",
+              background: "rgba(255, 255, 255, 0.15)",
+              border: "1px solid rgba(236, 72, 153, 0.6)",
               borderRadius: "24px",
               padding: "3rem 2.5rem",
               display: "flex",
               flexDirection: "column",
               justifyContent: "center",
+
               backdropFilter: "blur(12px)",
-              boxShadow: "0 4px 32px rgba(236,72,153,0.08)",
+              WebkitBackdropFilter: "blur(12px)",
+
+              boxShadow: `
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    0 4px 16px rgba(236, 72, 153, 0.08)
+  `,
             }}
           >
             <h1 style={{
-              fontSize: "clamp(2rem, 4vw, 3.5rem)",
-              fontWeight: 800,
+              fontSize: "clamp(2.5rem, 5vw, 4.5rem)",
+              fontWeight: "normal",
+              fontFamily: "var(--font-instrument-serif), serif",
               lineHeight: 1.1,
               color: "#ec4899",
               marginBottom: "0.25rem",
@@ -83,8 +90,9 @@ export default function HomePage() {
               Your Skin Tone,
             </h1>
             <h1 style={{
-              fontSize: "clamp(2rem, 4vw, 3.5rem)",
-              fontWeight: 800,
+              fontSize: "clamp(2.5rem, 5vw, 4.5rem)",
+              fontWeight: "normal",
+              fontFamily: "var(--font-instrument-serif), serif",
               lineHeight: 1.1,
               color: "#ec4899",
               fontStyle: "italic",
@@ -151,16 +159,21 @@ export default function HomePage() {
           <div
             className="hero-image-card"
             style={{
-              background: "rgba(255,255,255,0.75)",
-              border: "2px solid #f9a8d4",
+              background: "rgba(255, 255, 255, 0.15)",
+              border: "1px solid rgba(236, 72, 153, 0.6)",
               borderRadius: "24px",
-              overflow: "hidden",
-              backdropFilter: "blur(12px)",
-              boxShadow: "0 4px 32px rgba(236,72,153,0.08)",
+              padding: "3rem 2.5rem",
               display: "flex",
-              alignItems: "center",
+              flexDirection: "column",
               justifyContent: "center",
-              position: "relative",
+
+              backdropFilter: "blur(12px)",
+              WebkitBackdropFilter: "blur(12px)",
+
+              boxShadow: `
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    0 4px 16px rgba(236, 72, 153, 0.08)
+  `,
             }}
           >
             <img
