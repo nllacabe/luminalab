@@ -67,6 +67,12 @@ export async function analyzeSkin(
         );
     }
 
+    if (detection.faceLandmarks.length > 1) {
+        throw new Error(
+            "Multiple faces detected in the image. Please use a photo with exactly one person."
+        );
+    }
+
     const landmarks = detection.faceLandmarks[0];
 
     // 2. Extract skin-region pixel data

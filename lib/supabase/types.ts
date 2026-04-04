@@ -81,7 +81,7 @@ export type Database = {
                     name: string;
                     shade_name: string | null;
                     product_type: "foundation" | "lipstick" | "blush" | "concealer" | "other";
-                    finish: "matte" | "dewy" | "satin" | "natural" | "glossy" | "other" | null;
+                    finish: "matte" | "dewy" | "satin" | "natural" | "glossy" | "velvet" | "other" | null;
                     lab_l: number | null;
                     lab_a: number | null;
                     lab_b: number | null;

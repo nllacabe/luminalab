@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { RefreshCcw, Zap, ZapOff } from "lucide-react";
+import { detectFace } from "@/lib/analysis/mediapipe";
 
 type LightingLevel = "too-dark" | "moderate" | "good" | "too-bright";
 
@@ -64,6 +65,7 @@ export default function CameraCapture({ onCapture, onCancel }: CameraCaptureProp
     const [lighting, setLighting] = useState<LightingInfo | null>(null);
     const [cameraReady, setCameraReady] = useState(false);
     const [cameraError, setCameraError] = useState<string | null>(null);
+    const [faceCount, setFaceCount] = useState<number | null>(null);
 
     const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
     const [hasFlash, setHasFlash] = useState(false);
@@ -153,39 +155,53 @@ export default function CameraCapture({ onCapture, onCancel }: CameraCaptureProp
     useEffect(() => {
         if (!cameraReady) return;
 
-        function analyzeLighting() {
-            const video = videoRef.current;
-            const canvas = canvasRef.current;
-            if (!video || !canvas || video.videoWidth === 0) return;
+        let isAnalyzing = false;
+        async function analyzeFrame() {
+            if (isAnalyzing) return;
+            isAnalyzing = true;
 
-            const ctx = canvas.getContext("2d", { willReadFrequently: true });
-            if (!ctx) return;
+            try {
+                const video = videoRef.current;
+                const canvas = canvasRef.current;
+                if (!video || !canvas || video.videoWidth === 0) return;
 
-            // Sample at a smaller resolution for performance
-            const sampleW = 160;
-            const sampleH = 120;
-            canvas.width = sampleW;
-            canvas.height = sampleH;
-            ctx.drawImage(video, 0, 0, sampleW, sampleH);
+                const ctx = canvas.getContext("2d", { willReadFrequently: true });
+                if (!ctx) return;
 
-            const imageData = ctx.getImageData(0, 0, sampleW, sampleH);
-            const data = imageData.data;
+                // Sample at a smaller resolution for performance
+                // Increased to 320x240 to support face detection
+                const sampleW = 320;
+                const sampleH = 240;
+                canvas.width = sampleW;
+                canvas.height = sampleH;
+                ctx.drawImage(video, 0, 0, sampleW, sampleH);
 
-            let totalBrightness = 0;
-            const pixelCount = data.length / 4;
+                const imageData = ctx.getImageData(0, 0, sampleW, sampleH);
+                const data = imageData.data;
 
-            for (let i = 0; i < data.length; i += 4) {
-                // Perceived brightness (ITU-R BT.601)
-                totalBrightness += 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+                let totalBrightness = 0;
+                const pixelCount = data.length / 4;
+
+                for (let i = 0; i < data.length; i += 4) {
+                    // Perceived brightness (ITU-R BT.601)
+                    totalBrightness += 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+                }
+
+                const avgBrightness = totalBrightness / pixelCount;
+                setLighting(classifyLighting(avgBrightness));
+
+                const detection = await detectFace(canvas);
+                setFaceCount(detection ? detection.faceLandmarks.length : 0);
+            } catch (err) {
+                console.error("Frame analysis error:", err);
+            } finally {
+                isAnalyzing = false;
             }
-
-            const avgBrightness = totalBrightness / pixelCount;
-            setLighting(classifyLighting(avgBrightness));
         }
 
         // Run immediately, then every 500ms
-        analyzeLighting();
-        intervalRef.current = setInterval(analyzeLighting, 500);
+        analyzeFrame();
+        intervalRef.current = setInterval(analyzeFrame, 500);
 
         return () => {
             if (intervalRef.current) clearInterval(intervalRef.current);
@@ -345,35 +361,68 @@ export default function CameraCapture({ onCapture, onCancel }: CameraCaptureProp
             {/* Hidden canvas for brightness sampling */}
             <canvas ref={canvasRef} style={{ display: "none" }} />
 
-            {/* Lighting indicator */}
-            {lighting && (
-                <div
-                    className="lighting-indicator animate-fade-in"
-                    style={{
-                        borderColor: `color-mix(in srgb, ${lighting.color} 30%, transparent)`,
-                        background: `color-mix(in srgb, ${lighting.color} 8%, var(--card))`,
-                    }}
-                >
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                        <span
-                            className="lighting-dot"
-                            style={{ background: lighting.color }}
-                        />
-                        <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>
-                            {lighting.label}
-                        </span>
-                    </div>
-                    <p
+            {/* Context Indicators */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                {/* Lighting indicator */}
+                {lighting && (
+                    <div
+                        className="lighting-indicator animate-fade-in"
                         style={{
-                            fontSize: "0.8125rem",
-                            color: "var(--muted-foreground)",
-                            margin: 0,
+                            borderColor: `color-mix(in srgb, ${lighting.color} 30%, transparent)`,
+                            background: `color-mix(in srgb, ${lighting.color} 8%, var(--card))`,
                         }}
                     >
-                        {lighting.hint}
-                    </p>
-                </div>
-            )}
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                            <span
+                                className="lighting-dot"
+                                style={{ background: lighting.color }}
+                            />
+                            <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>
+                                {lighting.label}
+                            </span>
+                        </div>
+                        <p
+                            style={{
+                                fontSize: "0.8125rem",
+                                color: "var(--muted-foreground)",
+                                margin: 0,
+                            }}
+                        >
+                            {lighting.hint}
+                        </p>
+                    </div>
+                )}
+                
+                {/* Face count indicator */}
+                {faceCount !== null && faceCount !== 1 && (
+                    <div
+                        className="lighting-indicator animate-fade-in"
+                        style={{
+                            borderColor: `color-mix(in srgb, #d94f4f 30%, transparent)`,
+                            background: `color-mix(in srgb, #d94f4f 8%, var(--card))`,
+                        }}
+                    >
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                            <span
+                                className="lighting-dot"
+                                style={{ background: "#d94f4f" }}
+                            />
+                            <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>
+                                {faceCount === 0 ? "No Face Detected" : "Multiple Faces Detected"}
+                            </span>
+                        </div>
+                        <p
+                            style={{
+                                fontSize: "0.8125rem",
+                                color: "var(--muted-foreground)",
+                                margin: 0,
+                            }}
+                        >
+                            {faceCount === 0 ? "Please make sure your face is in the frame." : "Please make sure only one person is in the frame."}
+                        </p>
+                    </div>
+                )}
+            </div>
 
             {/* Actions */}
             {cameraReady && (
@@ -387,6 +436,11 @@ export default function CameraCapture({ onCapture, onCancel }: CameraCaptureProp
                     <button
                         className="btn btn-primary"
                         onClick={capturePhoto}
+                        disabled={
+                            lighting?.level === "too-dark" ||
+                            lighting?.level === "too-bright" ||
+                            faceCount !== 1
+                        }
                         style={{ minWidth: "160px", borderRadius: "999px" }}
                     >
                         Take Picture

@@ -106,7 +106,7 @@ CREATE TABLE public.products (
     name TEXT NOT NULL,                         -- e.g. "Fit Me Matte + Poreless"
     shade_name TEXT,                            -- e.g. "228 Soft Tan"
     product_type TEXT NOT NULL CHECK (product_type IN ('foundation', 'lipstick', 'blush', 'concealer', 'other')),
-    finish TEXT CHECK (finish IN ('matte', 'dewy', 'satin', 'natural', 'glossy', 'other')),
+    finish TEXT CHECK (finish IN ('matte', 'dewy', 'satin', 'natural', 'glossy', 'velvet', 'other')),
 
     -- CIELAB color values for matching
     lab_l NUMERIC(8, 4),                       -- L* (lightness 0-100)
@@ -259,7 +259,7 @@ CREATE TABLE public.custom_products (
     brand_name TEXT,                            -- free-text since it may not be in brands table
     shade_name TEXT,
     product_type TEXT NOT NULL CHECK (product_type IN ('foundation', 'lipstick', 'blush', 'concealer', 'other')),
-    finish TEXT CHECK (finish IN ('matte', 'dewy', 'satin', 'natural', 'glossy', 'other')),
+    finish TEXT CHECK (finish IN ('matte', 'dewy', 'satin', 'natural', 'glossy', 'velvet', 'other')),
 
     -- Color data (user can input or scan)
     lab_l NUMERIC(8, 4),

@@ -40,7 +40,7 @@ export async function getFaceLandmarker(): Promise<FaceLandmarker> {
                     delegate: "CPU",
                 },
                 runningMode: "IMAGE",
-                numFaces: 1,
+                numFaces: 2,
                 outputFacialTransformationMatrixes: false,
                 outputFaceBlendshapes: false,
             });
