@@ -1,15 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Briefcase, Heart, PartyPopper, Crown, CircleDot, Sun, X, ChevronDown } from "lucide-react";
 import type { ProductMatch } from "@/lib/recommendations/product-matcher";
 import { getRecommendations, loadProductsCsv } from "@/lib/recommendations/product-matcher";
 import { getProductsCsv } from "@/lib/recommendations/actions";
 import { getOwnedProductKeys } from "@/lib/products/actions";
 import { getUserPreferences } from "@/app/survey/actions";
+import { saveRecommendationSession } from "@/lib/recommendations/recommendation-history";
 import { OCCASIONS, OCCASION_INTENT_MAP } from "@/lib/recommendations/occasion-config";
 import type { OccasionKey } from "@/lib/recommendations/occasion-config";
 import type { LabColor } from "@/lib/analysis/color-science";
+import { createClient } from "@/lib/supabase/client";
 
 const OCCASION_ICONS: Record<string, React.ReactNode> = {
     Briefcase: <Briefcase size={18} />,
@@ -46,6 +48,7 @@ export default function Recommendations({ userLab, onBack }: RecommendationsProp
     const [productTypes, setProductTypes] = useState<string[]>([]);
     const [preferredBrands, setPreferredBrands] = useState<string[]>([]);
     const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+    const savedRef = useRef(false);
 
     useEffect(() => {
         async function init() {
@@ -88,7 +91,35 @@ export default function Recommendations({ userLab, onBack }: RecommendationsProp
                 const key = `${p.brandName.toLowerCase()}|${p.shadeName.toLowerCase()}|${p.hexColor.toLowerCase()}`;
                 return !owned.has(key);
             });
-            setMatches(filtered.slice(0, 16));
+            const final = filtered.slice(0, 16);
+            setMatches(final);
+
+            // Auto-save for logged-in users (only once per mount)
+            if (!savedRef.current && final.length > 0) {
+                savedRef.current = true;
+                const supabase = createClient();
+                supabase.auth.getSession().then(({ data: { session } }) => {
+                    if (session?.user) {
+                        saveRecommendationSession({
+                            labL: userLab.L,
+                            labA: userLab.a,
+                            labB: userLab.b,
+                            occasion: occ,
+                            products: final.map((p) => ({
+                                brandName: p.brandName,
+                                productName: p.productName,
+                                shadeName: p.shadeName,
+                                productType: p.productType,
+                                finish: p.finish,
+                                hexColor: p.hexColor,
+                                price: p.price,
+                                imageUrl: p.imageUrl,
+                                scoringMethod: p.scoringMethod,
+                            })),
+                        }).catch((err) => console.error("Failed to save recommendations:", err));
+                    }
+                });
+            }
         } finally {
             setLoading(false);
         }

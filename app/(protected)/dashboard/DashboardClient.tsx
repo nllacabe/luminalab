@@ -6,6 +6,9 @@ import Header from "@/components/layout/Header";
 import UserPreferenceSurvey from "@/components/survey/UserPreferenceSurvey";
 import type { UserPreferences } from "@/app/survey/actions";
 import type { UserProduct } from "@/lib/products/types";
+import type { RecommendationSession, RecommendationSessionProduct } from "@/lib/recommendations/recommendation-history";
+import { deleteRecommendationSession } from "@/lib/recommendations/recommendation-history";
+import { Trash2, ChevronDown, ChevronUp } from "lucide-react";
 
 interface Props {
     userEmail: string | null;
@@ -13,6 +16,7 @@ interface Props {
     brands: string[];
     prefs: UserPreferences | null;
     products: UserProduct[];
+    recSession: RecommendationSession | null;
 }
 
 const SKIN_TYPE_LABELS: Record<string, string> = {
@@ -54,9 +58,12 @@ function useBreakpoint() {
     };
 }
 
-export default function DashboardClient({ userEmail, showSurvey, brands, prefs, products }: Props) {
+export default function DashboardClient({ userEmail, showSurvey, brands, prefs, products, recSession }: Props) {
     const [surveyVisible, setSurveyVisible] = useState(showSurvey);
     const { isMobile, isDesktop } = useBreakpoint();
+    const [session, setSession] = useState<RecommendationSession | null>(recSession);
+    const [expanded, setExpanded] = useState(false);
+    const [deleting, setDeleting] = useState(false);
 
     const username = userEmail?.split("@")[0] ?? "there";
     const recentProducts = products.slice(0, 4);
@@ -94,29 +101,39 @@ export default function DashboardClient({ userEmail, showSurvey, brands, prefs, 
                     <div className="animate-fade-in" style={{ marginBottom: "1.5rem" }}>
                         <h1 style={{
                             fontSize: isMobile ? "1.375rem" : "1.75rem",
-                            fontWeight: 700,
-                            color: "#1f2937",
+                            fontWeight: 800,
+                            fontStyle: "italic",
+                            color: "#ec4899",
                             marginBottom: "0.25rem",
+                            fontFamily: "var(--font-instrument-serif), serif",
                         }}>
-                            Welcome back, {username} 👋
+                            Welcome back, {username}!
                         </h1>
                         <p style={{ color: "#6b7280", fontSize: "0.9375rem" }}>
-                            Your personalized skin analysis hub.
+                            Your personalized skin tone analysis hub.
                         </p>
                     </div>
 
-                    {/* Analyze banner */}
+                    {/* Analyze banner — glassmorphism, slightly more white */}
                     <div className="animate-fade-in" style={{
-                        background: "rgba(255,255,255,0.85)",
-                        border: "2px solid #f9a8d4",
+                        background: "rgba(255, 255, 255, 0.35)",
+                        border: "1px solid rgba(236, 72, 153, 0.5)",
                         borderRadius: "16px",
-                        padding: isMobile ? "1rem" : "1.25rem 1.5rem",
+                        padding: "1.25rem 1.5rem",
+
+                        backdropFilter: "blur(24px) saturate(160%)",
+                        WebkitBackdropFilter: "blur(24px) saturate(160%)",
+
+                        boxShadow: `
+                            0 8px 32px rgba(0, 0, 0, 0.08),
+                            0 4px 16px rgba(236, 72, 153, 0.08),
+                            inset 0 1px 0 rgba(255, 255, 255, 0.6)
+                        `,
                         display: "flex",
                         alignItems: isMobile ? "flex-start" : "center",
                         flexDirection: isMobile ? "column" : "row",
                         justifyContent: "space-between",
                         marginBottom: "1.25rem",
-                        backdropFilter: "blur(8px)",
                         gap: "1rem",
                     }}>
                         <div>
@@ -157,9 +174,9 @@ export default function DashboardClient({ userEmail, showSurvey, brands, prefs, 
                     }}>
                         {/* Preferences card */}
                         <div style={cardStyle}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
-                                <p style={sectionLabelStyle}>My Preferences</p>
-                                <Link href="/survey" style={{ fontSize: "0.75rem", color: "#ec4899", textDecoration: "underline" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem", fontWeight: 700, color: "#505050ff" }}>
+                                <p>My Preferences</p>
+                                <Link href="/survey" style={{ fontSize: "0.75rem", color: "#ec4899", textDecoration: "underline", fontWeight: 700 }}>
                                     Edit
                                 </Link>
                             </div>
@@ -222,9 +239,9 @@ export default function DashboardClient({ userEmail, showSurvey, brands, prefs, 
 
                         {/* Collection stats card */}
                         <div style={cardStyle}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
-                                <p style={sectionLabelStyle}>My Collection</p>
-                                <Link href="/my-products" style={{ fontSize: "0.75rem", color: "#ec4899", textDecoration: "underline" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem", fontWeight: 700, color: "#505050ff" }}>
+                                <p>My Collection</p>
+                                <Link href="/my-products" style={{ fontSize: "0.75rem", color: "#ec4899", textDecoration: "underline", fontWeight: 700 }}>
                                     Manage
                                 </Link>
                             </div>
@@ -240,7 +257,7 @@ export default function DashboardClient({ userEmail, showSurvey, brands, prefs, 
                                 <StatBox label="Product types" value={typeCount} />
                             </div>
                             <Link href="/my-products" style={{ textDecoration: "none" }}>
-                                <button style={{ ...pinkOutlineBtnStyle, width: "100%" }}>
+                                <button className="btn btn-secondary" style={{ width: "100%", borderRadius: "999px", fontSize: "0.8125rem", padding: "0.5rem 0" }}>
                                     View all products
                                 </button>
                             </Link>
@@ -249,14 +266,9 @@ export default function DashboardClient({ userEmail, showSurvey, brands, prefs, 
 
                     {/* Recently added */}
                     <div className="animate-fade-in-delay">
-                        <div style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            marginBottom: "0.75rem",
-                        }}>
-                            <p style={sectionLabelStyle}>Recently Added</p>
-                            <Link href="/my-products" style={{ fontSize: "0.75rem", color: "#ec4899", textDecoration: "underline" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem", fontWeight: 700, color: "#505050ff" }}>
+                            <p>Recently Added</p>
+                            <Link href="/my-products" style={{ fontSize: "0.75rem", color: "#ec4899", textDecoration: "underline", fontWeight: 700 }}>
                                 See all
                             </Link>
                         </div>
@@ -311,6 +323,44 @@ export default function DashboardClient({ userEmail, showSurvey, brands, prefs, 
                         )}
                     </div>
 
+                    {/* ── Previous Recommendations ────────────────────── */}
+                    <div className="animate-fade-in-delay" style={{ marginTop: "1.25rem" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem", fontWeight: 700, color: "#505050ff" }}>
+                            <p>Previous Recommendations</p>
+                        </div>
+
+                        {session ? (
+                            <PreviousRecommendationCard
+                                session={session}
+                                expanded={expanded}
+                                onToggle={() => setExpanded(e => !e)}
+                                deleting={deleting}
+                                isMobile={isMobile}
+                                onDelete={async () => {
+                                    setDeleting(true);
+                                    const res = await deleteRecommendationSession();
+                                    if (res.success) setSession(null);
+                                    setDeleting(false);
+                                }}
+                            />
+                        ) : (
+                            <div style={{ ...cardStyle, textAlign: "center", padding: "2rem" }}>
+                                <p style={{ marginBottom: "0.5rem", display: "flex", justifyContent: "center" }}>
+                                    <img src="/icon.png" alt="icon" style={{ width: "2.75rem", height: "2.75rem" }} />
+                                </p>
+                                <p style={{ fontWeight: 600, color: "#1f2937", marginBottom: "0.25rem" }}>
+                                    No recommendation history yet
+                                </p>
+                                <p style={{ fontSize: "0.875rem", color: "#9ca3af", marginBottom: "1rem" }}>
+                                    Run a skin analysis to get personalized product matches.
+                                </p>
+                                <Link href="/assessment" style={{ textDecoration: "none" }}>
+                                    <button className="btn btn-primary" style={{ borderRadius: "999px", fontSize: "0.8125rem", padding: "0.5rem 1rem" }}>Start analysis →</button>
+                                </Link>
+                            </div>
+                        )}
+                    </div>
+
                 </div>
             </main>
 
@@ -350,12 +400,13 @@ function StatBox({ label, value }: { label: string; value: number }) {
     return (
         <div style={{
             background: "#fdf2f8",
+            border: "1px solid rgba(236, 72, 153, 0.5)",
             borderRadius: "12px",
             padding: "0.875rem 0.75rem",
             textAlign: "center",
         }}>
             <p style={{ fontSize: "1.5rem", fontWeight: 700, color: "#ec4899", lineHeight: 1 }}>{value}</p>
-            <p style={{ fontSize: "0.7rem", color: "#9ca3af", marginTop: "0.3rem" }}>{label}</p>
+            <p style={{ fontSize: "0.7rem", color: "#505050ff", marginTop: "0.3rem" }}>{label}</p>
         </div>
     );
 }
@@ -363,15 +414,20 @@ function StatBox({ label, value }: { label: string; value: number }) {
 function ProductMiniCard({ product }: { product: UserProduct }) {
     return (
         <div style={{
-            background: "rgba(255,255,255,0.85)",
-            border: "2px solid #f9a8d4",
+            background: "rgba(255, 255, 255, 0.50)",
+            border: "1px solid rgba(236, 72, 153, 0.5)",
+            backdropFilter: "blur(24px) saturate(160%)",
+            WebkitBackdropFilter: "blur(24px) saturate(160%)",
+            boxShadow: `
+  0 8px 32px rgba(0,0,0,0.08),
+  inset 0 1px 0 rgba(255,255,255,0.5)
+`,
             borderRadius: "16px",
             padding: "1rem",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
             gap: "0.4rem",
-            backdropFilter: "blur(8px)",
             transition: "transform 0.15s ease, box-shadow 0.15s ease",
         }}
             onMouseEnter={e => {
@@ -438,14 +494,278 @@ function Sparkle({ top, left, right, size, delay }: {
     );
 }
 
+// ── Previous Recommendations Card ────────────────────────────────────────────
+
+const OCCASION_LABEL_MAP: Record<string, string> = {
+    everyday: "Everyday / Casual",
+    work: "Work / Office",
+    date_night: "Date Night",
+    formal: "Formal Event",
+    outdoor: "Outdoor",
+    party: "Party",
+    job_interview: "Work / Office",
+    formal_gala: "Formal Event",
+    solemn: "Formal Event",
+};
+
+function PreviousRecommendationCard({
+    session,
+    expanded,
+    onToggle,
+    deleting,
+    isMobile,
+    onDelete,
+}: {
+    session: RecommendationSession;
+    expanded: boolean;
+    onToggle: () => void;
+    deleting: boolean;
+    isMobile: boolean;
+    onDelete: () => void;
+}) {
+    const date = new Date(session.updatedAt);
+    const dateStr = date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+    });
+    const timeStr = date.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+    });
+    const occasionLabel = OCCASION_LABEL_MAP[session.occasion] ?? session.occasion;
+    const previewCount = isMobile ? 6 : 8;
+    const previewProducts = session.products.slice(0, previewCount);
+    const allProducts = session.products;
+
+    return (
+        <div style={{
+            ...cardStyle,
+            overflow: "hidden",
+            transition: "box-shadow 0.2s ease",
+        }}
+            onMouseEnter={e => {
+                e.currentTarget.style.boxShadow = "0 6px 24px rgba(244,114,182,0.14)";
+            }}
+            onMouseLeave={e => {
+                e.currentTarget.style.boxShadow = "none";
+            }}
+        >
+            {/* Header row */}
+            <div style={{
+                display: "flex",
+                alignItems: isMobile ? "flex-start" : "center",
+                justifyContent: "space-between",
+                flexDirection: isMobile ? "column" : "row",
+                gap: isMobile ? "0.5rem" : "0",
+                marginBottom: "0.875rem",
+            }}>
+                <div>
+                    <p style={{
+                        fontWeight: 700,
+                        fontSize: "0.9375rem",
+                        color: "#1f2937",
+                        margin: 0,
+                        marginBottom: "0.2rem",
+                    }}>
+                        Latest Shade Matches
+                    </p>
+                    <p style={{ fontSize: "0.75rem", color: "#9ca3af", margin: 0 }}>
+                        {dateStr} at {timeStr} · <span style={{ color: "#ec4899", fontWeight: 600 }}>{occasionLabel}</span>
+                    </p>
+                </div>
+                <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                    <button
+                        onClick={onDelete}
+                        disabled={deleting}
+                        style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "0.3rem",
+                            padding: "0.35rem 0.75rem",
+                            background: "transparent",
+                            border: "1.5px solid #fca5a5",
+                            borderRadius: "999px",
+                            fontSize: "0.75rem",
+                            fontWeight: 600,
+                            color: "#ef4444",
+                            cursor: deleting ? "wait" : "pointer",
+                            opacity: deleting ? 0.5 : 1,
+                            transition: "background 0.15s",
+                        }}
+                        onMouseEnter={e => { if (!deleting) e.currentTarget.style.background = "#fef2f2"; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
+                    >
+                        <Trash2 size={13} />
+                        {deleting ? "Deleting…" : "Clear"}
+                    </button>
+                </div>
+            </div>
+
+            {/* Swatch preview (collapsed) */}
+            {!expanded && (
+                <div style={{ marginBottom: "0.75rem" }}>
+                    <div style={{
+                        display: "flex",
+                        gap: "0.5rem",
+                        flexWrap: "wrap",
+                        alignItems: "center",
+                    }}>
+                        {previewProducts.map((p, i) => (
+                            <div
+                                key={i}
+                                title={`${p.brandName} – ${p.shadeName}`}
+                                style={{
+                                    width: "36px",
+                                    height: "36px",
+                                    borderRadius: "50%",
+                                    background: p.hexColor || "#ddd",
+                                    border: "2.5px solid #fff",
+                                    outline: "1.5px solid #f9a8d4",
+                                    boxShadow: `0 2px 6px ${p.hexColor || "#ddd"}44`,
+                                    cursor: "pointer",
+                                    transition: "transform 0.15s ease",
+                                }}
+                                onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.15)"; }}
+                                onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; }}
+                            />
+                        ))}
+                        {session.products.length > previewCount && (
+                            <span style={{
+                                fontSize: "0.75rem",
+                                fontWeight: 600,
+                                color: "#9ca3af",
+                                marginLeft: "0.25rem",
+                            }}>
+                                +{session.products.length - previewCount} more
+                            </span>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* Expanded grid */}
+            {expanded && (
+                <div style={{
+                    display: "grid",
+                    gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)",
+                    gap: isMobile ? "0.625rem" : "0.75rem",
+                    marginBottom: "0.75rem",
+                }}>
+                    {allProducts.map((p, i) => (
+                        <RecProductMini key={i} product={p} />
+                    ))}
+                </div>
+            )}
+
+            {/* Expand / collapse toggle */}
+            <button
+                onClick={onToggle}
+                style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "0.375rem",
+                    width: "100%",
+                    padding: "0.5rem 0",
+                    background: "none",
+                    border: "none",
+                    borderTop: "1px solid #fce7f3",
+                    fontWeight: 600,
+                    fontSize: "0.8125rem",
+                    color: "#ec4899",
+                    cursor: "pointer",
+                    transition: "color 0.15s",
+                }}
+                onMouseEnter={e => { e.currentTarget.style.color = "#be185d"; }}
+                onMouseLeave={e => { e.currentTarget.style.color = "#ec4899"; }}
+            >
+                {expanded ? (
+                    <>Show less <ChevronUp size={15} /></>
+                ) : (
+                    <>View all {session.products.length} products <ChevronDown size={15} /></>
+                )}
+            </button>
+        </div>
+    );
+}
+
+function RecProductMini({ product }: { product: RecommendationSessionProduct }) {
+    return (
+        <div style={{
+            background: "#fdf2f8",
+            borderRadius: "12px",
+            padding: "0.75rem",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "0.35rem",
+            transition: "transform 0.15s ease, box-shadow 0.15s ease",
+        }}
+            onMouseEnter={e => {
+                e.currentTarget.style.transform = "translateY(-2px)";
+                e.currentTarget.style.boxShadow = "0 4px 14px rgba(244,114,182,0.15)";
+            }}
+            onMouseLeave={e => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "none";
+            }}
+        >
+            {product.hexColor ? (
+                <div style={{
+                    width: "36px",
+                    height: "36px",
+                    borderRadius: "50%",
+                    background: product.hexColor,
+                    border: "2px solid #f9a8d4",
+                    boxShadow: `0 2px 6px ${product.hexColor}44`,
+                    flexShrink: 0,
+                }} />
+            ) : (
+                <div style={{ fontSize: "1.25rem" }}>💄</div>
+            )}
+            <p style={{ fontSize: "0.625rem", color: "#9ca3af", textAlign: "center", margin: 0, lineHeight: 1.2 }}>
+                {product.brandName}
+            </p>
+            <p style={{
+                fontSize: "0.75rem",
+                fontWeight: 600,
+                color: "#1f2937",
+                textAlign: "center",
+                lineHeight: 1.2,
+                margin: 0,
+            }}>
+                {product.shadeName || product.productName}
+            </p>
+            <span style={{
+                fontSize: "0.5625rem",
+                fontWeight: 700,
+                color: product.scoringMethod === "harmony" ? "#be185d" : "#9ca3af",
+            }}>
+                {product.scoringMethod === "harmony" ? "✦ Harmony" : "✦ Match"}
+            </span>
+        </div>
+    );
+}
+
 // ── Shared styles ─────────────────────────────────────────────────────────────
 
 const cardStyle: React.CSSProperties = {
-    background: "rgba(255,255,255,0.85)",
-    border: "2px solid #f9a8d4",
+    background: "rgba(255, 255, 255, 0.50)",
+    border: "1px solid rgba(236, 72, 153, 0.5)",
     borderRadius: "16px",
     padding: "1.25rem 1.5rem",
-    backdropFilter: "blur(8px)",
+
+    backdropFilter: "blur(24px) saturate(160%)",
+    WebkitBackdropFilter: "blur(24px) saturate(160%)",
+
+    boxShadow: `
+        0 8px 32px rgba(0, 0, 0, 0.08),
+        0 4px 16px rgba(236, 72, 153, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5)
+    `,
+
+    overflow: "hidden",
 };
 
 const sectionLabelStyle: React.CSSProperties = {

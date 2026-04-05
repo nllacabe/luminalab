@@ -59,6 +59,12 @@ export default function Header({ isLoggedIn }: HeaderProps) {
                     <>
                         <nav className="site-header-nav">
                             <Link
+                                href="/dashboard"
+                                className={`site-header-link${pathname === "/dashboard" ? " active" : ""}`}
+                            >
+                                Dashboard
+                            </Link>
+                            <Link
                                 href="/assessment"
                                 className={`site-header-link${pathname === "/assessment" ? " active" : ""}`}
                             >

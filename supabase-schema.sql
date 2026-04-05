@@ -368,3 +368,37 @@ CREATE INDEX idx_reverse_match_source_custom ON public.reverse_match_results(sou
 ALTER TABLE public.user_preferences
     ADD COLUMN IF NOT EXISTS occasion VARCHAR(32) DEFAULT 'everyday'
     CHECK (occasion IN ('job_interview','date_night','party','formal_gala','solemn','everyday'));
+
+
+-- ─────────────────────────────────────────────────────────────
+-- 12. RECOMMENDATION SESSIONS (latest recommendation per user)
+-- ─────────────────────────────────────────────────────────────
+CREATE TABLE public.recommendation_sessions (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL UNIQUE,
+
+    -- Skin analysis context
+    lab_l NUMERIC(8, 4) NOT NULL,
+    lab_a NUMERIC(8, 4) NOT NULL,
+    lab_b NUMERIC(8, 4) NOT NULL,
+    occasion TEXT DEFAULT 'everyday',
+
+    -- Recommended products stored as JSONB array
+    products JSONB NOT NULL DEFAULT '[]',
+
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.recommendation_sessions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own sessions" ON public.recommendation_sessions
+    FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own sessions" ON public.recommendation_sessions
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update own sessions" ON public.recommendation_sessions
+    FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can delete own sessions" ON public.recommendation_sessions
+    FOR DELETE USING (auth.uid() = user_id);
+
+CREATE INDEX idx_rec_sessions_user ON public.recommendation_sessions(user_id);

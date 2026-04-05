@@ -80,15 +80,8 @@ export default function SurveyPageClient({ brands, initialPrefs, userEmail }: Pr
                     backdropFilter: "blur(6px)",
                     padding: "1.75rem 2rem",
                 }}>
-                    <h2 style={{
-                        fontSize: "0.95rem",
-                        fontWeight: 600,
-                        color: "#9ca3af",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.06em",
-                        marginBottom: "1rem",
-                    }}>
-                        Account
+                    <h2 style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem", fontWeight: 700, color: "#505050ff" }}>
+                        Account Settings
                     </h2>
 
                     {/* Email */}
