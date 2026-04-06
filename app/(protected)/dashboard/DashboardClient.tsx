@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Header from "@/components/layout/Header";
 import UserPreferenceSurvey from "@/components/survey/UserPreferenceSurvey";
 import type { UserPreferences } from "@/app/survey/actions";
@@ -23,7 +24,6 @@ const SKIN_TYPE_LABELS: Record<string, string> = {
     oily: "Oily",
     dry: "Dry",
     combination: "Combination",
-    sensitive: "Sensitive",
 };
 
 const PRODUCT_TYPE_LABELS: Record<string, string> = {
@@ -59,6 +59,7 @@ function useBreakpoint() {
 }
 
 export default function DashboardClient({ userEmail, showSurvey, brands, prefs, products, recSession }: Props) {
+    const router = useRouter();
     const [surveyVisible, setSurveyVisible] = useState(showSurvey);
     const { isMobile, isDesktop } = useBreakpoint();
     const [session, setSession] = useState<RecommendationSession | null>(recSession);
@@ -82,7 +83,10 @@ export default function DashboardClient({ userEmail, showSurvey, brands, prefs, 
                 <UserPreferenceSurvey
                     brands={brands}
                     initialPrefs={null}
-                    onComplete={() => setSurveyVisible(false)}
+                    onComplete={() => {
+                        setSurveyVisible(false);
+                        router.refresh();
+                    }}
                     isOverlay={true}
                 />
             )}
@@ -309,7 +313,9 @@ export default function DashboardClient({ userEmail, showSurvey, brands, prefs, 
                             </div>
                         ) : (
                             <div style={{ ...cardStyle, textAlign: "center", padding: "2.5rem" }}>
-                                <p style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>💄</p>
+                                <p style={{ marginBottom: "0.5rem", display: "flex", justifyContent: "center" }}>
+                                    <img src="/icon.png" alt="icon" style={{ width: "2.75rem", height: "2.75rem" }} />
+                                </p>
                                 <p style={{ fontWeight: 600, color: "#1f2937", marginBottom: "0.25rem" }}>
                                     No products yet
                                 </p>
