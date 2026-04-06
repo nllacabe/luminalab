@@ -51,6 +51,20 @@ export interface ProductMatch {
     hue_family: string;
     /** Chroma magnitude (0–100 scale) used by the occasion chroma floor guard. */
     chroma_value: number;
+    /** Whether this product is owned by the user (from their collection). */
+    isOwned: boolean;
+}
+
+/** Input shape for user-owned products passed into the matcher. */
+export interface OwnedProductInput {
+    brandName: string;
+    name: string;
+    shadeName: string;
+    productType: string;
+    finish: string;
+    hexColor: string;
+    price: number;
+    imageUrl: string;
 }
 
 interface CsvProduct {
@@ -392,6 +406,7 @@ export function getRecommendations(
     occasion: OccasionKey = "everyday",
     productTypes: string[] = [],
     preferredBrands: string[] = [],
+    ownedProducts: OwnedProductInput[] = [],
 ): ProductMatch[] {
     let allProducts = getProducts();
 
@@ -402,7 +417,8 @@ export function getRecommendations(
     }
 
     // Filter by user's preferred product types if any are specified
-    const products = productTypes.length > 0
+    const hasTypeFilter = productTypes.length > 0;
+    const products = hasTypeFilter
         ? allProducts.filter(p => {
             const t = p.product_type.toLowerCase().trim();
             return productTypes.some(pref => {
@@ -420,8 +436,7 @@ export function getRecommendations(
     const skinCategory = classifySkinTone(ita);
 
     const seen = new Set<string>();
-    const lipScored: ProductMatch[] = [];
-    const otherScored: ProductMatch[] = [];
+    const scored: ProductMatch[] = [];
 
     for (const p of products) {
         const key = `${p.brand_name}|${p.product_name}|${p.shade_name}|${p.hex_color}`;
@@ -439,7 +454,7 @@ export function getRecommendations(
             ? computeHarmonyScore(productLab, userLab, skinCategory)
             : deltaE2000(userLab, productLab);
 
-        const match: ProductMatch = {
+        scored.push({
             brandName: p.brand_name,
             productName: p.product_name,
             shadeName: p.shade_name,
@@ -453,14 +468,13 @@ export function getRecommendations(
             scoringMethod: isLipProduct ? "harmony" : "deltaE",
             hue_family,
             chroma_value,
-        };
-
-        if (isLipProduct) {
-            lipScored.push(match);
-        } else {
-            otherScored.push(match);
-        }
+            isOwned: false,
+        });
     }
+
+    // Split into lip vs other for occasion filtering
+    const lipScored = scored.filter(p => LIP_PRODUCT_TYPES.has(p.productType.toLowerCase().trim()));
+    const otherScored = scored.filter(p => !LIP_PRODUCT_TYPES.has(p.productType.toLowerCase().trim()));
 
     // Sort lip/cheek products by harmony score, then apply occasion filter
     lipScored.sort((a, b) => a.deltaE - b.deltaE);
@@ -470,8 +484,151 @@ export function getRecommendations(
     // Sort other products by ΔE
     otherScored.sort((a, b) => a.deltaE - b.deltaE);
 
-    // Merge: if user wants both lip and non-lip types, interleave them;
-    // otherwise just return whichever bucket has results
-    const all = [...filteredLip, ...otherScored];
-    return all.slice(0, topN);
+    // ── Merge strategy ────────────────────────────────────────────────────
+    let catalogResults: ProductMatch[];
+
+    if (hasTypeFilter) {
+        // User chose specific types — no forced diversity, just concat
+        catalogResults = [...filteredLip, ...otherScored];
+    } else {
+        // No filter — round-robin interleave across product-type groups
+        catalogResults = interleaveByProductType([...filteredLip, ...otherScored]);
+    }
+
+    // Trim to topN catalog results
+    catalogResults = catalogResults.slice(0, topN);
+
+    // ── Owned product injection ───────────────────────────────────────────
+    if (ownedProducts.length > 0 && catalogResults.length > 0) {
+        // Build a lookup of owned product keys for fast matching
+        const ownedKeySet = new Set(
+            ownedProducts
+                .filter(op => op.hexColor)
+                .map(op => `${op.brandName.toLowerCase().trim()}|${op.shadeName.toLowerCase().trim()}|${op.hexColor.toLowerCase().trim()}`)
+        );
+
+        // Pass 1: flag catalog results that the user already owns
+        for (const cr of catalogResults) {
+            const crKey = `${cr.brandName.toLowerCase().trim()}|${cr.shadeName.toLowerCase().trim()}|${cr.hexColor.toLowerCase().trim()}`;
+            if (ownedKeySet.has(crKey)) {
+                cr.isOwned = true;
+            }
+        }
+
+        // Determine the score range of catalog results
+        const catalogScores = catalogResults.map(p => p.deltaE);
+        const minScore = Math.min(...catalogScores);
+        const maxScore = Math.max(...catalogScores);
+
+        // Pass 2: score owned products NOT already in catalog results
+        const ownedMatches: ProductMatch[] = [];
+        for (const op of ownedProducts) {
+            if (!op.hexColor || !op.hexColor.startsWith("#")) continue;
+
+            // Skip if already in catalog results (already flagged as owned above)
+            const opKey = `${op.brandName.toLowerCase().trim()}|${op.shadeName.toLowerCase().trim()}|${op.hexColor.toLowerCase().trim()}`;
+            const alreadyInResults = catalogResults.some(cr => {
+                const crKey = `${cr.brandName.toLowerCase().trim()}|${cr.shadeName.toLowerCase().trim()}|${cr.hexColor.toLowerCase().trim()}`;
+                return crKey === opKey;
+            });
+            if (alreadyInResults) continue;
+
+            const rgb = hexToRgb(op.hexColor);
+            const productLab = rgbToLab(rgb.r, rgb.g, rgb.b);
+            const { hue_family, chroma_value } = inferHueFamily(productLab);
+
+            const isLipProduct = LIP_PRODUCT_TYPES.has(op.productType.toLowerCase().trim());
+            const score = isLipProduct
+                ? computeHarmonyScore(productLab, userLab, skinCategory)
+                : deltaE2000(userLab, productLab);
+            const roundedScore = Math.round(score * 100) / 100;
+
+            // Only include if score falls within the catalog range
+            if (roundedScore >= minScore && roundedScore <= maxScore) {
+                ownedMatches.push({
+                    brandName: op.brandName,
+                    productName: op.name,
+                    shadeName: op.shadeName,
+                    productType: op.productType,
+                    finish: op.finish || "",
+                    hexColor: op.hexColor,
+                    price: op.price || 0,
+                    deltaE: roundedScore,
+                    imageUrl: op.imageUrl || "",
+                    productUrl: "",
+                    scoringMethod: isLipProduct ? "harmony" : "deltaE",
+                    hue_family,
+                    chroma_value,
+                    isOwned: true,
+                });
+            }
+        }
+
+        // Merge owned products into catalog results, sorted by score
+        if (ownedMatches.length > 0) {
+            ownedMatches.sort((a, b) => a.deltaE - b.deltaE);
+            // Insert owned products at their natural score position
+            const merged = [...catalogResults, ...ownedMatches];
+            merged.sort((a, b) => a.deltaE - b.deltaE);
+            return merged;
+        }
+    }
+
+    return catalogResults;
+}
+
+// ── Round-robin interleaver ──────────────────────────────────────────────────
+
+/**
+ * Groups products by normalized product-type category, then picks one from
+ * each group in rotation (round-robin). Within each group, products are
+ * already sorted by score (lower = better).
+ */
+function interleaveByProductType(products: ProductMatch[]): ProductMatch[] {
+    // Normalize into broad categories for grouping
+    const categoryOf = (p: ProductMatch): string => {
+        const t = p.productType.toLowerCase().trim();
+        if (t === "foundation" || t === "concealer") return "foundation";
+        if (t === "blush") return "blush";
+        if (LIP_PRODUCT_TYPES.has(t)) return "lipstick";
+        return "other";
+    };
+
+    // Build per-category queues (each already sorted by score)
+    const groups = new Map<string, ProductMatch[]>();
+    for (const p of products) {
+        const cat = categoryOf(p);
+        if (!groups.has(cat)) groups.set(cat, []);
+        groups.get(cat)!.push(p);
+    }
+
+    // Sort each group by score internally
+    for (const arr of groups.values()) {
+        arr.sort((a, b) => a.deltaE - b.deltaE);
+    }
+
+    // Round-robin pick
+    const result: ProductMatch[] = [];
+    const categoryKeys = [...groups.keys()];
+    const pointers = new Map<string, number>();
+    for (const k of categoryKeys) pointers.set(k, 0);
+
+    let exhausted = 0;
+    while (exhausted < categoryKeys.length) {
+        for (const cat of categoryKeys) {
+            const idx = pointers.get(cat)!;
+            const arr = groups.get(cat)!;
+            if (idx < arr.length) {
+                result.push(arr[idx]);
+                pointers.set(cat, idx + 1);
+            }
+        }
+        // Check how many are exhausted
+        exhausted = 0;
+        for (const cat of categoryKeys) {
+            if (pointers.get(cat)! >= groups.get(cat)!.length) exhausted++;
+        }
+    }
+
+    return result;
 }

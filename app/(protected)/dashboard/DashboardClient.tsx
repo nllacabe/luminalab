@@ -699,7 +699,7 @@ function PreviousRecommendationCard({
 function RecProductMini({ product }: { product: RecommendationSessionProduct }) {
     return (
         <div style={{
-            background: "#fdf2f8",
+            background: product.isOwned ? "#f5f3ff" : "#fdf2f8",
             borderRadius: "12px",
             padding: "0.75rem",
             display: "flex",
@@ -707,23 +707,43 @@ function RecProductMini({ product }: { product: RecommendationSessionProduct }) 
             alignItems: "center",
             gap: "0.35rem",
             transition: "transform 0.15s ease, box-shadow 0.15s ease",
+            position: "relative",
+            border: product.isOwned ? "1.5px solid #c4b5fd" : "none",
         }}
             onMouseEnter={e => {
                 e.currentTarget.style.transform = "translateY(-2px)";
-                e.currentTarget.style.boxShadow = "0 4px 14px rgba(244,114,182,0.15)";
+                e.currentTarget.style.boxShadow = product.isOwned
+                    ? "0 4px 14px rgba(139,92,246,0.18)"
+                    : "0 4px 14px rgba(244,114,182,0.15)";
             }}
             onMouseLeave={e => {
                 e.currentTarget.style.transform = "translateY(0)";
                 e.currentTarget.style.boxShadow = "none";
             }}
         >
+            {product.isOwned && (
+                <div style={{
+                    position: "absolute",
+                    top: "0.35rem",
+                    right: "0.35rem",
+                    background: "linear-gradient(135deg, #8b5cf6, #a78bfa)",
+                    color: "#fff",
+                    fontSize: "0.5rem",
+                    fontWeight: 700,
+                    padding: "0.125rem 0.35rem",
+                    borderRadius: "999px",
+                    letterSpacing: "0.04em",
+                }}>
+                    Owned
+                </div>
+            )}
             {product.hexColor ? (
                 <div style={{
                     width: "36px",
                     height: "36px",
                     borderRadius: "50%",
                     background: product.hexColor,
-                    border: "2px solid #f9a8d4",
+                    border: product.isOwned ? "2px solid #c4b5fd" : "2px solid #f9a8d4",
                     boxShadow: `0 2px 6px ${product.hexColor}44`,
                     flexShrink: 0,
                 }} />
@@ -746,9 +766,9 @@ function RecProductMini({ product }: { product: RecommendationSessionProduct }) 
             <span style={{
                 fontSize: "0.5625rem",
                 fontWeight: 700,
-                color: product.scoringMethod === "harmony" ? "#be185d" : "#9ca3af",
+                color: product.isOwned ? "#7c3aed" : product.scoringMethod === "harmony" ? "#be185d" : "#9ca3af",
             }}>
-                {product.scoringMethod === "harmony" ? "✦ Harmony" : "✦ Match"}
+                {product.isOwned ? "★ Owned" : product.scoringMethod === "harmony" ? "✦ Harmony" : "✦ Match"}
             </span>
         </div>
     );

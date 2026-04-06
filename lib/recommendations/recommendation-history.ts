@@ -14,6 +14,8 @@ export interface RecommendationSessionProduct {
     price: number;
     imageUrl: string;
     scoringMethod: string;
+    /** Whether this product is owned by the user. */
+    isOwned?: boolean;
 }
 
 export interface RecommendationSession {

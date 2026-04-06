@@ -4,8 +4,9 @@ import { useState, useEffect, useRef } from "react";
 import { Briefcase, Heart, PartyPopper, Crown, CircleDot, Sun, X, ChevronDown } from "lucide-react";
 import type { ProductMatch } from "@/lib/recommendations/product-matcher";
 import { getRecommendations, loadProductsCsv } from "@/lib/recommendations/product-matcher";
+import type { OwnedProductInput } from "@/lib/recommendations/product-matcher";
 import { getProductsCsv } from "@/lib/recommendations/actions";
-import { getOwnedProductKeys } from "@/lib/products/actions";
+import { getUserOwnedProductsForMatching } from "@/lib/products/actions";
 import { getUserPreferences } from "@/app/survey/actions";
 import { saveRecommendationSession } from "@/lib/recommendations/recommendation-history";
 import { OCCASIONS, OCCASION_INTENT_MAP } from "@/lib/recommendations/occasion-config";
@@ -44,7 +45,7 @@ export default function Recommendations({ userLab, onBack }: RecommendationsProp
     const [occasion, setOccasion] = useState<OccasionKey>("everyday");
     const [showOccasionModal, setShowOccasionModal] = useState(false);
     const [csvLoaded, setCsvLoaded] = useState(false);
-    const [ownedSet, setOwnedSet] = useState<Set<string>>(new Set());
+    const [ownedProducts, setOwnedProducts] = useState<OwnedProductInput[]>([]);
     const [productTypes, setProductTypes] = useState<string[]>([]);
     const [preferredBrands, setPreferredBrands] = useState<string[]>([]);
     const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
@@ -54,16 +55,15 @@ export default function Recommendations({ userLab, onBack }: RecommendationsProp
         async function init() {
             setLoading(true);
             try {
-                const [csvText, ownedKeys, prefs] = await Promise.all([
+                const [csvText, ownedProds, prefs] = await Promise.all([
                     getProductsCsv(),
-                    getOwnedProductKeys().catch(() => [] as string[]),
+                    getUserOwnedProductsForMatching().catch(() => [] as OwnedProductInput[]),
                     getUserPreferences().catch(() => null),
                 ]);
                 loadProductsCsv(csvText);
                 setCsvLoaded(true);
 
-                const owned = new Set(ownedKeys);
-                setOwnedSet(owned);
+                setOwnedProducts(ownedProds);
 
                 const savedOccasion = (prefs?.occasion ?? "everyday") as OccasionKey;
                 const savedTypes = prefs?.product_types ?? [];
@@ -72,7 +72,7 @@ export default function Recommendations({ userLab, onBack }: RecommendationsProp
                 setProductTypes(savedTypes);
                 setPreferredBrands(savedBrands);
 
-                applyRecommendations(savedOccasion, owned, savedTypes, savedBrands);
+                applyRecommendations(savedOccasion, ownedProds, savedTypes, savedBrands);
             } catch (err) {
                 console.error("Failed to load products:", err);
                 setLoading(false);
@@ -82,16 +82,13 @@ export default function Recommendations({ userLab, onBack }: RecommendationsProp
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [userLab]);
 
-    function applyRecommendations(occ: OccasionKey, owned: Set<string>, types: string[], brands: string[]) {
+    function applyRecommendations(occ: OccasionKey, owned: OwnedProductInput[], types: string[], brands: string[]) {
         setLoading(true);
         setVisibleCount(PAGE_SIZE);
         try {
-            const results = getRecommendations(userLab, 20, occ, types, brands);
-            const filtered = results.filter((p) => {
-                const key = `${p.brandName.toLowerCase()}|${p.shadeName.toLowerCase()}|${p.hexColor.toLowerCase()}`;
-                return !owned.has(key);
-            });
-            const final = filtered.slice(0, 16);
+            const results = getRecommendations(userLab, 20, occ, types, brands, owned);
+            // No longer filtering out owned products — they're tagged with isOwned
+            const final = results.slice(0, 16);
             setMatches(final);
 
             // Auto-save for logged-in users (only once per mount)
@@ -115,6 +112,7 @@ export default function Recommendations({ userLab, onBack }: RecommendationsProp
                                 price: p.price,
                                 imageUrl: p.imageUrl,
                                 scoringMethod: p.scoringMethod,
+                                isOwned: p.isOwned,
                             })),
                         }).catch((err) => console.error("Failed to save recommendations:", err));
                     }
@@ -129,7 +127,7 @@ export default function Recommendations({ userLab, onBack }: RecommendationsProp
         setOccasion(key);
         setShowOccasionModal(false);
         if (csvLoaded) {
-            applyRecommendations(key, ownedSet, productTypes, preferredBrands);
+            applyRecommendations(key, ownedProducts, productTypes, preferredBrands);
         }
     }
 
@@ -419,7 +417,7 @@ function ProductCard({ product, index }: { product: ProductMatch; index: number 
             className="animate-fade-in"
             style={{
                 background: "rgba(255,255,255,0.85)",
-                border: "2px solid #f9a8d4",
+                border: product.isOwned ? "2px solid #a78bfa" : "2px solid #f9a8d4",
                 borderRadius: "16px",
                 overflow: "hidden",
                 display: "flex",
@@ -427,23 +425,46 @@ function ProductCard({ product, index }: { product: ProductMatch; index: number 
                 animationDelay: `${index * 0.05}s`,
                 transition: "transform 0.2s ease, box-shadow 0.2s ease",
                 backdropFilter: "blur(8px)",
+                position: "relative",
             }}
             onMouseEnter={(e) => {
                 e.currentTarget.style.transform = "translateY(-4px)";
-                e.currentTarget.style.boxShadow = "0 8px 24px rgba(244,114,182,0.2)";
+                e.currentTarget.style.boxShadow = product.isOwned
+                    ? "0 8px 24px rgba(167,139,250,0.25)"
+                    : "0 8px 24px rgba(244,114,182,0.2)";
             }}
             onMouseLeave={(e) => {
                 e.currentTarget.style.transform = "translateY(0)";
                 e.currentTarget.style.boxShadow = "none";
             }}
         >
+            {/* Owned badge */}
+            {product.isOwned && (
+                <div style={{
+                    position: "absolute",
+                    top: "0.5rem",
+                    left: "0.5rem",
+                    zIndex: 2,
+                    background: "linear-gradient(135deg, #8b5cf6, #a78bfa)",
+                    color: "#fff",
+                    fontSize: "0.5625rem",
+                    fontWeight: 700,
+                    padding: "0.2rem 0.5rem",
+                    borderRadius: "999px",
+                    letterSpacing: "0.04em",
+                    boxShadow: "0 2px 6px rgba(139,92,246,0.3)",
+                }}>
+                    ★ Owned Product
+                </div>
+            )}
+
             {/* Image area */}
             <div style={{
                 position: "relative",
                 background: "#fff",
                 margin: "0.625rem",
                 borderRadius: "12px",
-                border: "1.5px solid #f9a8d4",
+                border: product.isOwned ? "1.5px solid #c4b5fd" : "1.5px solid #f9a8d4",
                 aspectRatio: "1",
                 display: "flex",
                 alignItems: "center",
@@ -471,7 +492,7 @@ function ProductCard({ product, index }: { product: ProductMatch; index: number 
                     backgroundColor: product.hexColor,
                     border: "2.5px solid #fff",
                     boxShadow: `0 2px 8px ${product.hexColor}88`,
-                    outline: "1.5px solid #f9a8d4",
+                    outline: product.isOwned ? "1.5px solid #c4b5fd" : "1.5px solid #f9a8d4",
                 }} />
             </div>
 
@@ -484,15 +505,19 @@ function ProductCard({ product, index }: { product: ProductMatch; index: number 
                     <span style={{ fontSize: "0.625rem", fontWeight: 700, color: "#d1d5db", textTransform: "uppercase", letterSpacing: "0.06em" }}>
                         SHADE
                     </span>
-                    <span style={{ fontSize: "0.625rem", fontWeight: 700, color: "#ec4899", textTransform: "capitalize" }}>
+                    <span style={{ fontSize: "0.625rem", fontWeight: 700, color: product.isOwned ? "#8b5cf6" : "#ec4899", textTransform: "capitalize" }}>
                         {productTypeLabel}
                     </span>
                 </div>
                 <div style={{ fontWeight: 800, fontSize: "1rem", color: "#1f2937", marginBottom: "0.25rem", lineHeight: 1.2 }}>
                     {product.shadeName}
                 </div>
-                <div style={{ fontSize: "0.5625rem", fontWeight: 600, color: product.scoringMethod === "harmony" ? "#be185d" : "#9ca3af" }}>
-                    {product.scoringMethod === "harmony" ? "✦ Harmonizes with your skin" : "✦ Matches your skin color"}
+                <div style={{ fontSize: "0.5625rem", fontWeight: 600, color: product.isOwned ? "#7c3aed" : product.scoringMethod === "harmony" ? "#be185d" : "#9ca3af" }}>
+                    {product.isOwned
+                        ? "★ From your collection"
+                        : product.scoringMethod === "harmony"
+                            ? "✦ Harmonizes with your skin"
+                            : "✦ Matches your skin color"}
                 </div>
             </div>
         </div>

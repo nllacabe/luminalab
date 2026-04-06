@@ -328,3 +328,43 @@ export async function getOwnedProductKeys(): Promise<string[]> {
             `${(r.brand_name ?? "").toLowerCase()}|${(r.shade_name ?? "").toLowerCase()}|${(r.hex_color ?? "").toLowerCase()}`
     );
 }
+
+// ── Get owned products for the recommendation matcher ───────────────────────
+
+/**
+ * Returns the user's owned products (both catalog-claimed and custom)
+ * with the fields needed by the recommendation matcher for scoring.
+ */
+export async function getUserOwnedProductsForMatching(): Promise<{
+    brandName: string;
+    name: string;
+    shadeName: string;
+    productType: string;
+    finish: string;
+    hexColor: string;
+    price: number;
+    imageUrl: string;
+}[]> {
+    const supabase = await db();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return [];
+
+    const { data } = await supabase
+        .from("custom_products")
+        .select("name, brand_name, shade_name, product_type, finish, hex_color, price, image_url")
+        .eq("user_id", user.id);
+
+    if (!data) return [];
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return data.map((r: any) => ({
+        brandName: r.brand_name ?? "",
+        name: r.name ?? "",
+        shadeName: r.shade_name ?? "",
+        productType: r.product_type ?? "other",
+        finish: r.finish ?? "",
+        hexColor: r.hex_color ?? "",
+        price: Number(r.price) || 0,
+        imageUrl: r.image_url ?? "",
+    }));
+}
