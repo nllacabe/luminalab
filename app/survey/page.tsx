@@ -6,7 +6,7 @@ import SurveyPageClient from "./SurveyPageClient";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "Preferences — LUMINALAB",
+    title: "Preferences — LuminaLAB",
     description: "Set your makeup preferences to get personalized product recommendations.",
 };
 

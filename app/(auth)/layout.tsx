@@ -24,7 +24,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                 <div style={{ position: "relative", zIndex: 1 }}>
                     <Link href="/" style={{ textDecoration: "none" }}>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src="/logo.png" alt="LUMINALAB" style={{ height: "40px" }} />
+                        <img src="/logo.png" alt="LuminaLAB" style={{ height: "40px" }} />
                     </Link>
                 </div>
                 <div style={{ position: "relative", zIndex: 1 }}>
@@ -79,7 +79,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                 <div className="md:!hidden" style={{ marginBottom: "2rem" }}>
                     <Link href="/" style={{ textDecoration: "none" }}>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src="/logo.png" alt="LUMINALAB" style={{ height: "40px" }} />
+                        <img src="/logo.png" alt="LuminaLAB" style={{ height: "40px" }} />
                     </Link>
                 </div>
                 {children}

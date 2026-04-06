@@ -92,7 +92,7 @@ export default function AssessmentPage() {
                     position: "relative",
                     zIndex: 1,
                 }}>
-                    © {new Date().getFullYear()} LUMINALAB. All rights reserved.
+                    © {new Date().getFullYear()} LuminaLAB. All rights reserved.
                 </footer>
             </div>
         );
@@ -140,7 +140,7 @@ export default function AssessmentPage() {
                 position: "relative",
                 zIndex: 1,
             }}>
-                © {new Date().getFullYear()} LUMINALAB. All rights reserved.
+                © {new Date().getFullYear()} LuminaLAB. All rights reserved.
             </footer>
         </div>
     );

@@ -3,7 +3,7 @@ import MyProductsClient from "@/components/products/MyProductsClient";
 import Header from "@/components/layout/Header";
 
 export const metadata: Metadata = {
-    title: "My Products — LUMINALAB",
+    title: "My Products — LuminaLAB",
     description:
         "Manage your personal product collection. Add owned products for more personalized shade recommendations.",
 };
@@ -57,7 +57,7 @@ export default function MyProductsPage() {
                 position: "relative",
                 zIndex: 1,
             }}>
-                © {new Date().getFullYear()} LUMINALAB. All rights reserved.
+                © {new Date().getFullYear()} LuminaLAB. All rights reserved.
             </footer>
         </div>
     );

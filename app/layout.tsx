@@ -19,7 +19,7 @@ const instrumentSerif = Instrument_Serif({
 });
 
 export const metadata: Metadata = {
-  title: "LuminaLab",
+  title: "LuminaLAB",
   description:
     "Discover your perfect makeup match with skin color analysis and personalized product recommendations.",
 };

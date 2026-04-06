@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Header from "@/components/layout/Header";
 
 export const metadata: Metadata = {
-  title: "LUMINALAB",
+  title: "LuminaLAB",
   description:
     "Discover your perfect makeup match with skin color analysis. Get personalized product recommendations tailored to your unique skin tone.",
 };

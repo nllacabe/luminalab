@@ -372,7 +372,7 @@ export default function DashboardClient({ userEmail, showSurvey, brands, prefs, 
                 position: "relative",
                 zIndex: 1,
             }}>
-                © {new Date().getFullYear()} LUMINALAB. All rights reserved.
+                © {new Date().getFullYear()} LuminaLAB. All rights reserved.
             </footer>
         </div>
     );
