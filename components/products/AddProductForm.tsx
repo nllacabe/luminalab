@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { Sparkles, Plus, X } from "lucide-react";
+import { Sparkles, Plus, X, Search } from "lucide-react";
 import type { DuplicateCandidate, UserProduct } from "@/lib/products/types";
 import { searchCatalogProducts, addCatalogProduct, addCustomProduct } from "@/lib/products/actions";
 
@@ -169,8 +169,19 @@ export default function AddProductForm({ onProductAdded, ownedProducts = [] }: A
 
                 {candidates.length > 0 && (
                     <div className="animate-fade-in" style={{ marginBottom: "1rem" }}>
-                        <p style={{ fontSize: "0.8125rem", color: "#6b7280", marginBottom: "0.5rem", fontWeight: 500 }}>
-                            🔍 Found in our catalog — tap to add:
+                        <p
+                            style={{
+                                fontSize: "0.8125rem",
+                                color: "#6b7280",
+                                marginBottom: "0.5rem",
+                                fontWeight: 500,
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "0.4rem",
+                            }}
+                        >
+                            <Search size={14} />
+                            Found in our catalog — tap to add:
                         </p>
                         <div style={{
                             maxHeight: "260px",
@@ -233,7 +244,7 @@ export default function AddProductForm({ onProductAdded, ownedProducts = [] }: A
                     <div className="custom-modal" onClick={(e) => e.stopPropagation()}>
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.25rem" }}>
                             <div>
-                                <h3 style={{ fontSize: "1.125rem", fontWeight: 700, color: "#1f2937", margin: 0 }}>
+                                <h3 style={{ fontSize: "1.125rem", fontWeight: 700, color: "#505050ff", margin: 0 }}>
                                     New Custom Product
                                 </h3>
                                 <p style={{ fontSize: "0.8125rem", color: "#9ca3af", margin: "0.25rem 0 0" }}>
@@ -250,21 +261,57 @@ export default function AddProductForm({ onProductAdded, ownedProducts = [] }: A
 
                         <form onSubmit={handleAddCustom} className="custom-product-form">
                             <div className="form-grid">
+
                                 <div>
-                                    <label className="label">Brand Name *</label>
-                                    <input className="input" required value={brandName} onChange={(e) => setBrandName(e.target.value)} placeholder="e.g. Happy Skin" />
+                                    <label className="label font-bold">
+                                        Brand Name <span className="text-red-500 ml-0.5">*</span>
+                                    </label>
+                                    <input
+                                        className="input"
+                                        required
+                                        value={brandName}
+                                        onChange={(e) => setBrandName(e.target.value)}
+                                        placeholder="e.g. Happy Skin"
+                                    />
                                 </div>
+
                                 <div>
-                                    <label className="label">Product Name *</label>
-                                    <input className="input" required value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Lip Mallow Tint" />
+                                    <label className="label font-bold">
+                                        Product Name <span className="text-red-500 ml-0.5">*</span>
+                                    </label>
+                                    <input
+                                        className="input"
+                                        required
+                                        value={name}
+                                        onChange={(e) => setName(e.target.value)}
+                                        placeholder="e.g. Lip Mallow Tint"
+                                    />
                                 </div>
+
                                 <div>
-                                    <label className="label">Shade Name</label>
-                                    <input className="input" value={shadeName} onChange={(e) => setShadeName(e.target.value)} placeholder="e.g. Vibin'" />
+                                    <label className="label font-bold">
+                                        Shade Name <span className="text-red-500 ml-0.5">*</span>
+                                    </label>
+                                    <input
+                                        className="input"
+                                        required
+                                        value={shadeName}
+                                        onChange={(e) => setShadeName(e.target.value)}
+                                        placeholder="e.g. Vibin'"
+                                    />
                                 </div>
+
                                 <div>
-                                    <label className="label">Product Type</label>
-                                    <select className="input" value={productType} onChange={(e) => setProductType(e.target.value)}>
+                                    <label className="label font-bold">
+                                        Product Type <span className="text-red-500 ml-0.5">*</span>
+                                    </label>
+                                    <select
+                                        className="input"
+                                        required
+                                        value={productType}
+                                        onChange={(e) => setProductType(e.target.value)}
+                                    >
+                                        <option value="">Select type</option>
                                         <option value="foundation">Foundation</option>
                                         <option value="lipstick">Lipstick</option>
                                         <option value="lip">Lip</option>
@@ -273,9 +320,14 @@ export default function AddProductForm({ onProductAdded, ownedProducts = [] }: A
                                         <option value="other">Other</option>
                                     </select>
                                 </div>
+
                                 <div>
                                     <label className="label">Finish</label>
-                                    <select className="input" value={finish} onChange={(e) => setFinish(e.target.value)}>
+                                    <select
+                                        className="input"
+                                        value={finish}
+                                        onChange={(e) => setFinish(e.target.value)}
+                                    >
                                         <option value="matte">Matte</option>
                                         <option value="dewy">Dewy</option>
                                         <option value="satin">Satin</option>
@@ -284,32 +336,67 @@ export default function AddProductForm({ onProductAdded, ownedProducts = [] }: A
                                         <option value="other">Other</option>
                                     </select>
                                 </div>
+
                                 <div>
                                     <label className="label">Price (PHP)</label>
-                                    <input className="input" type="number" min="0" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="e.g. 599" />
+                                    <input
+                                        className="input"
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        value={price}
+                                        onChange={(e) => setPrice(e.target.value)}
+                                        placeholder="e.g. 599"
+                                    />
                                 </div>
                             </div>
 
-                            <div style={{ marginTop: "0.75rem" }}>
-                                <label className="label">Color</label>
-                                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                            {/* Color Section */}
+                            <div className="mt-3">
+                                <label className="label font-bold">
+                                    Color <span className="text-red-500 ml-0.5">*</span>
+                                </label>
+                                <div className="flex items-center gap-3">
                                     <input
                                         type="color"
+                                        required
                                         value={hexColor}
                                         onChange={(e) => setHexColor(e.target.value)}
-                                        style={{ width: "48px", height: "48px", border: "2px solid #f9a8d4", borderRadius: "12px", cursor: "pointer", padding: "2px" }}
+                                        className="w-12 h-12 border-2 border-pink-300 rounded-xl cursor-pointer p-1"
                                     />
-                                    <input className="input" value={hexColor} onChange={(e) => setHexColor(e.target.value)} placeholder="#RRGGBB" style={{ maxWidth: "140px" }} />
+                                    <input
+                                        className="input max-w-[140px]"
+                                        required
+                                        value={hexColor}
+                                        onChange={(e) => setHexColor(e.target.value)}
+                                        placeholder="#RRGGBB"
+                                    />
                                 </div>
                             </div>
 
-                            <div style={{ display: "flex", gap: "0.75rem", marginTop: "1.25rem" }}>
-                                <button type="submit" className="btn btn-primary btn-full" disabled={submitting}>
-                                    {submitting ? <><span className="spinner" /> Adding…</> : "Add Product"}
-                                </button>
-                                <button type="button" className="btn btn-secondary" onClick={() => setShowCustomModal(false)}>
+                            {/* Buttons */}
+                            <div className="flex gap-3 mt-5">
+                                <button
+                                    type="button"
+                                    className="btn btn-secondary"
+                                    onClick={() => setShowCustomModal(false)}
+                                >
                                     Cancel
                                 </button>
+                                <button
+                                    type="submit"
+                                    className="btn btn-primary btn-full"
+                                    disabled={submitting}
+                                >
+                                    {submitting ? (
+                                        <>
+                                            <span className="spinner" /> Adding…
+                                        </>
+                                    ) : (
+                                        "Add Product"
+                                    )}
+                                </button>
+
                             </div>
                         </form>
                     </div>
