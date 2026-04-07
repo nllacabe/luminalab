@@ -132,13 +132,13 @@ export default function UserPreferenceSurvey({ brands, initialPrefs, onComplete,
             position: "relative",
             overflow: "hidden",
         }}>
-        <style>{`
+            <style>{`
             .filter-section-title {
-                font-size: 0.75rem;
-                font-weight: 700;
-                text-transform: uppercase;
-                letter-spacing: 0.08em;
-                color: #9ca3af;
+                font-size: 0.875rem;
+                font-weight: 500;
+                text-transform: none;
+                letter-spacing: normal;
+                color: #000;
                 margin-bottom: 0.625rem;
             }
             .filter-chip {
@@ -388,6 +388,9 @@ export default function UserPreferenceSurvey({ brands, initialPrefs, onComplete,
                             />
                         ))}
                     </div>
+                    <p style={{ fontSize: "0.6875rem", color: "#9ca3af", marginTop: "0.375rem", fontStyle: "italic", marginLeft: "0.375rem" }}>
+                        Leave empty to show all types
+                    </p>
                 </section>
 
                 <Divider />
@@ -507,6 +510,9 @@ export default function UserPreferenceSurvey({ brands, initialPrefs, onComplete,
                             />
                         ))}
                     </div>
+                    <p style={{ fontSize: "0.6875rem", color: "#9ca3af", marginTop: "0.375rem", fontStyle: "italic", marginLeft: "0.375rem" }}>
+                        Leave empty to show all finishes
+                    </p>
                 </section>
 
                 {error && (

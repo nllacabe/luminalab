@@ -191,6 +191,17 @@ export default function Recommendations({ userLab, onBack }: RecommendationsProp
         setDraftFinishes([]);
         setDraftBudgetMin(0);
         setDraftBudgetMax(5000);
+
+        setOccasion("everyday");
+        setProductTypes([]);
+        setFinishes([]);
+        setBudgetMin(0);
+        setBudgetMax(5000);
+        setShowFilterModal(false);
+
+        if (csvLoaded) {
+            applyRecommendations("everyday", ownedProducts, [], preferredBrands, [], 0, 5000);
+        }
     }
 
     function toggleDraftType(id: string) {
@@ -276,13 +287,13 @@ export default function Recommendations({ userLab, onBack }: RecommendationsProp
                     gap: 1.25rem;
                 }
                 .filter-section-title {
-                    font-size: 0.75rem;
-                    font-weight: 700;
-                    text-transform: uppercase;
-                    letter-spacing: 0.08em;
-                    color: #9ca3af;
-                    margin-bottom: 0.625rem;
-                }
+                font-size: 0.875rem;
+                font-weight: 500;
+                text-transform: none;
+                letter-spacing: normal;
+                color: #000;
+                margin-bottom: 0.625rem;
+            }
                 .filter-chip {
                     display: inline-flex;
                     align-items: center;
@@ -684,7 +695,7 @@ export default function Recommendations({ userLab, onBack }: RecommendationsProp
                                         </button>
                                     ))}
                                 </div>
-                                <p style={{ fontSize: "0.6875rem", color: "#9ca3af", marginTop: "0.375rem", fontStyle: "italic" }}>
+                                <p style={{ fontSize: "0.6875rem", color: "#9ca3af", marginTop: "0.375rem", fontStyle: "italic", marginLeft: "0.375rem" }}>
                                     Leave empty to show all types
                                 </p>
                             </div>
@@ -757,7 +768,7 @@ export default function Recommendations({ userLab, onBack }: RecommendationsProp
                                         </button>
                                     ))}
                                 </div>
-                                <p style={{ fontSize: "0.6875rem", color: "#9ca3af", marginTop: "0.375rem", fontStyle: "italic" }}>
+                                <p style={{ fontSize: "0.6875rem", color: "#9ca3af", marginTop: "0.375rem", fontStyle: "italic", marginLeft: "0.375rem" }}>
                                     Leave empty to show all finishes
                                 </p>
                             </div>
