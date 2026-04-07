@@ -30,7 +30,7 @@ const PRODUCT_TYPE_LABELS: Record<string, string> = {
     foundation: "Foundation",
     lipstick: "Lips",
     blush: "Blush",
-    other: "Eyes",
+    // other: "Eyes",
 };
 
 const OCCASION_LABELS: Record<string, string> = {

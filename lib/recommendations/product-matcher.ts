@@ -407,6 +407,8 @@ export function getRecommendations(
     productTypes: string[] = [],
     preferredBrands: string[] = [],
     ownedProducts: OwnedProductInput[] = [],
+    finishes: string[] = [],
+    budgetRange?: { min: number; max: number },
 ): ProductMatch[] {
     let allProducts = getProducts();
 
@@ -414,6 +416,20 @@ export function getRecommendations(
     if (preferredBrands.length > 0) {
         const lowerPreferredBrands = preferredBrands.map(b => b.toLowerCase().trim());
         allProducts = allProducts.filter(p => lowerPreferredBrands.includes(p.brand_name.toLowerCase().trim()));
+    }
+
+    // Filter by finish preferences if any are specified
+    if (finishes.length > 0) {
+        const lowerFinishes = finishes.map(f => f.toLowerCase().trim());
+        allProducts = allProducts.filter(p => lowerFinishes.includes(p.finish.toLowerCase().trim()));
+    }
+
+    // Filter by budget range if specified
+    if (budgetRange && (budgetRange.min > 0 || budgetRange.max < 5000)) {
+        allProducts = allProducts.filter(p => {
+            const price = parseFloat(p.price) || 0;
+            return price >= budgetRange.min && price <= budgetRange.max;
+        });
     }
 
     // Filter by user's preferred product types if any are specified
@@ -425,7 +441,7 @@ export function getRecommendations(
                 if (pref === "foundation") return t === "foundation" || t === "concealer";
                 if (pref === "lipstick") return LIP_PRODUCT_TYPES.has(t);
                 if (pref === "blush") return t === "blush";
-                if (pref === "other") return t === "eyes" || t === "other";
+                // if (pref === "other") return t === "eyes" || t === "other";
                 return t === pref;
             });
         })

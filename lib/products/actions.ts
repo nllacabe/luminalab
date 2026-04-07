@@ -101,7 +101,7 @@ function normalizeProductType(raw: string): ValidProductType {
         'lip gloss': 'lipstick',
         base: 'foundation',
         powder: 'foundation',
-        eyes: 'other',
+        // eyes: 'other',
         eyeshadow: 'other',
         mascara: 'other',
         bronzer: 'other',

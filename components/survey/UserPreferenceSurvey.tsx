@@ -31,7 +31,7 @@ const PRODUCT_TYPES = [
     { id: "foundation", label: "Base / Foundation" },
     { id: "lipstick", label: "Lips / Lipstick" },
     { id: "blush", label: "Cheeks / Blush" },
-    { id: "other", label: "Eyes" },
+    // { id: "other", label: "Eyes" },
 ];
 
 const SKIN_TYPES = [
@@ -132,25 +132,90 @@ export default function UserPreferenceSurvey({ brands, initialPrefs, onComplete,
             position: "relative",
             overflow: "hidden",
         }}>
-            <style>{`
-            .occasion-option {
+        <style>{`
+            .filter-section-title {
+                font-size: 0.75rem;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+                color: #9ca3af;
+                margin-bottom: 0.625rem;
+            }
+            .filter-chip {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.375rem;
+                padding: 0.5rem 0.875rem;
+                border-radius: 999px;
+                cursor: pointer;
+                font-size: 0.8125rem;
+                font-weight: 600;
+                transition: all 0.15s ease;
+                border: 1.5px solid #e5e7eb;
+                background: #fff;
+                color: #374151;
+                user-select: none;
+            }
+            .filter-chip:hover {
+                border-color: #f9a8d4;
+                background: #fef2f8;
+            }
+            .filter-chip.active {
+                border-color: #ec4899;
+                background: linear-gradient(135deg, #fce7f3, #fbcfe8);
+                color: #be185d;
+                box-shadow: 0 2px 8px rgba(236,72,153,0.15);
+            }
+            .occasion-grid-option {
                 display: flex;
-                align-items: flex-start;
-                gap: 0.2rem;
-                padding: 0.75rem 0.875rem;
+                align-items: center;
+                gap: 0.625rem;
+                padding: 0.625rem 0.75rem;
                 border-radius: 12px;
                 cursor: pointer;
                 text-align: left;
                 transition: all 0.15s ease;
-                flex-direction: column;
+                border: 1.5px solid #e5e7eb;
+                background: #fff;
+            }
+            .occasion-grid-option:hover {
+                border-color: #f9a8d4;
+                background: #fef2f8;
+            }
+            .occasion-grid-option.active {
+                border-color: #ec4899;
+                background: linear-gradient(135deg, #fce7f3, #fbcfe8);
+                box-shadow: 0 2px 8px rgba(236,72,153,0.12);
             }
             @media (max-width: 640px) {
-                .occasion-option {
+                .occasion-grid-option {
+                    flex-direction: column;
                     align-items: center;
                     text-align: center;
-                    gap: 0.375rem;
-                    padding: 0.875rem 0.5rem;
+                    gap: 0.25rem;
+                    padding: 0.75rem 0.5rem;
                 }
+            }
+            .dual-range-input-survey::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                width: 18px;
+                height: 18px;
+                border-radius: 50%;
+                background: #ec4899;
+                border: 2px solid #fff;
+                box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+                pointer-events: auto;
+                cursor: pointer;
+            }
+            .dual-range-input-survey::-moz-range-thumb {
+                width: 18px;
+                height: 18px;
+                border-radius: 50%;
+                background: #ec4899;
+                border: 2px solid #fff;
+                box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+                pointer-events: auto;
+                cursor: pointer;
             }
         `}</style>
             {/* Header with X close button */}
@@ -210,13 +275,22 @@ export default function UserPreferenceSurvey({ brands, initialPrefs, onComplete,
                 gap: "1.75rem",
             }}>
 
-                {/* Q1 — Budget (single dual-thumb range) */}
                 <section>
                     <QuestionLabel num={1} text="What is your typical budget for makeup products?" />
-                    <div style={{ marginTop: "1rem" }}>
+                    <div style={{
+                        background: "#fef7ff",
+                        borderRadius: "14px",
+                        padding: "1rem 1.25rem",
+                        border: "1px solid #fce7f3",
+                        marginTop: "0.5rem"
+                    }}>
                         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-                            <span style={labelSm}>PHP {budgetMin.toLocaleString()}</span>
-                            <span style={labelSm}>PHP {budgetMax.toLocaleString()}</span>
+                            <span style={{ fontSize: "0.8125rem", fontWeight: 600, color: "#6b7280" }}>
+                                PHP {budgetMin.toLocaleString()}
+                            </span>
+                            <span style={{ fontSize: "0.8125rem", fontWeight: 600, color: "#6b7280" }}>
+                                PHP {budgetMax.toLocaleString()}
+                            </span>
                         </div>
                         {/* Dual-thumb range slider */}
                         <div style={{ position: "relative", height: "24px" }}>
@@ -226,7 +300,7 @@ export default function UserPreferenceSurvey({ brands, initialPrefs, onComplete,
                                 top: "50%",
                                 left: 0,
                                 right: 0,
-                                height: "6px",
+                                height: "5px",
                                 background: "#fce7f3",
                                 borderRadius: "3px",
                                 transform: "translateY(-50%)",
@@ -237,8 +311,8 @@ export default function UserPreferenceSurvey({ brands, initialPrefs, onComplete,
                                 top: "50%",
                                 left: `${minPct}%`,
                                 width: `${maxPct - minPct}%`,
-                                height: "6px",
-                                background: "#ec4899",
+                                height: "5px",
+                                background: "linear-gradient(90deg, #ec4899, #f472b6)",
                                 borderRadius: "3px",
                                 transform: "translateY(-50%)",
                             }} />
@@ -251,6 +325,7 @@ export default function UserPreferenceSurvey({ brands, initialPrefs, onComplete,
                                 value={budgetMin}
                                 onChange={e => handleRangeMin(Number(e.target.value))}
                                 style={dualRangeInput}
+                                className="dual-range-input-survey"
                             />
                             {/* Max thumb */}
                             <input
@@ -261,10 +336,18 @@ export default function UserPreferenceSurvey({ brands, initialPrefs, onComplete,
                                 value={budgetMax}
                                 onChange={e => handleRangeMax(Number(e.target.value))}
                                 style={dualRangeInput}
+                                className="dual-range-input-survey"
                             />
                         </div>
-                        <p style={{ ...labelSm, marginTop: "0.5rem", color: "#ec4899", fontWeight: 600 }}>
-                            Range: PHP {budgetMin.toLocaleString()} – PHP {budgetMax.toLocaleString()}
+                        <p style={{
+                            fontSize: "0.75rem",
+                            color: "#ec4899",
+                            fontWeight: 600,
+                            marginTop: "0.375rem",
+                            textAlign: "center",
+                            margin: "0.375rem 0 0",
+                        }}>
+                            PHP {budgetMin.toLocaleString()} — PHP {budgetMax.toLocaleString()}
                         </p>
                     </div>
                 </section>
@@ -275,10 +358,7 @@ export default function UserPreferenceSurvey({ brands, initialPrefs, onComplete,
                 <section>
                     <QuestionLabel num={2} text="Which brands do you prefer or are interested in?" italic="(Multiple selection)" />
                     <div style={{
-                        display: "grid",
-                        gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
-                        gap: "0.5rem",
-                        marginTop: "0.75rem",
+                        display: "flex", flexWrap: "wrap", gap: "0.5rem", marginTop: "0.75rem",
                     }}>
                         {brands.map(brand => (
                             <CheckboxItem
@@ -297,10 +377,7 @@ export default function UserPreferenceSurvey({ brands, initialPrefs, onComplete,
                 <section>
                     <QuestionLabel num={3} text="What types of makeup products are you most interested in?" italic="(Multiple selection)" />
                     <div style={{
-                        display: "grid",
-                        gridTemplateColumns: "1fr 1fr",
-                        gap: "0.5rem",
-                        marginTop: "0.75rem",
+                        display: "flex", flexWrap: "wrap", gap: "0.5rem", marginTop: "0.75rem",
                     }}>
                         {PRODUCT_TYPES.map(pt => (
                             <CheckboxItem
@@ -333,41 +410,33 @@ export default function UserPreferenceSurvey({ brands, initialPrefs, onComplete,
                                     key={key}
                                     type="button"
                                     onClick={() => setOccasion(key)}
-                                    className="occasion-option"
-                                    style={{
-                                        border: `2px solid ${isSelected ? "#ec4899" : "#f9a8d4"}`,
-                                        background: isSelected
-                                            ? "linear-gradient(135deg, #fce7f3, #fbcfe8)"
-                                            : "rgba(255,255,255,0.7)",
-                                        boxShadow: isSelected
-                                            ? "0 2px 12px rgba(236,72,153,0.18)"
-                                            : "none",
-                                        transform: isSelected ? "scale(1.02)" : "scale(1)",
-                                    }}
+                                    className={`occasion-grid-option ${isSelected ? "active" : ""}`}
                                 >
-                                    {IconComp && (
-                                        <IconComp
-                                            size={22}
-                                            color={isSelected ? "#be185d" : "#9ca3af"}
-                                            strokeWidth={2}
-                                        />
-                                    )}
                                     <span style={{
-                                        fontWeight: 700,
-                                        fontSize: "0.8rem",
-                                        color: isSelected ? "#be185d" : "#374151",
-                                        lineHeight: 1.25,
+                                        color: isSelected ? "#be185d" : "#9ca3af",
+                                        display: "flex",
+                                        flexShrink: 0,
                                     }}>
-                                        {intent.label}
+                                        {IconComp && <IconComp size={20} />}
                                     </span>
-                                    <span style={{
-                                        fontSize: "0.7rem",
-                                        color: isSelected ? "#db2777" : "#9ca3af",
-                                        fontStyle: "italic",
-                                        lineHeight: 1.2,
-                                    }}>
-                                        {intent.descriptor}
-                                    </span>
+                                    <div>
+                                        <div style={{
+                                            fontSize: "0.8125rem",
+                                            fontWeight: 700,
+                                            color: isSelected ? "#be185d" : "#1f2937",
+                                            lineHeight: 1.25,
+                                        }}>
+                                            {intent.label}
+                                        </div>
+                                        <div style={{
+                                            fontSize: "0.625rem",
+                                            color: isSelected ? "#db2777" : "#9ca3af",
+                                            marginTop: "0.1rem",
+                                            fontStyle: "italic",
+                                        }}>
+                                            {intent.descriptor}
+                                        </div>
+                                    </div>
                                 </button>
                             );
                         })}
@@ -380,10 +449,7 @@ export default function UserPreferenceSurvey({ brands, initialPrefs, onComplete,
                 <section>
                     <QuestionLabel num={5} text="What is your skin type?" />
                     <div style={{
-                        display: "grid",
-                        gridTemplateColumns: "1fr 1fr",
-                        gap: "0.5rem",
-                        marginTop: "0.75rem",
+                        display: "flex", flexWrap: "wrap", gap: "0.5rem", marginTop: "0.75rem",
                     }}>
                         {SKIN_TYPES.map(st => (
                             <RadioItem
@@ -402,7 +468,7 @@ export default function UserPreferenceSurvey({ brands, initialPrefs, onComplete,
                 {/* Q6 — Values (Lucide icons instead of emojis) */}
                 <section>
                     <QuestionLabel num={6} text="What values matter most to you?" italic="(Multiple selection)" />
-                    <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginTop: "0.75rem" }}>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginTop: "0.75rem" }}>
                         <CheckboxItem
                             label="Cruelty-free"
                             icon={<Rabbit size={16} />}
@@ -430,10 +496,7 @@ export default function UserPreferenceSurvey({ brands, initialPrefs, onComplete,
                 <section>
                     <QuestionLabel num={7} text="What finish do you prefer?" italic="(Multiple selection)" />
                     <div style={{
-                        display: "grid",
-                        gridTemplateColumns: "1fr 1fr 1fr",
-                        gap: "0.5rem",
-                        marginTop: "0.75rem",
+                        display: "flex", flexWrap: "wrap", gap: "0.5rem", marginTop: "0.75rem",
                     }}>
                         {FINISHES.map(f => (
                             <CheckboxItem
@@ -512,14 +575,14 @@ export default function UserPreferenceSurvey({ brands, initialPrefs, onComplete,
 
 function QuestionLabel({ num, text, italic }: { num: number; text: string; italic?: string }) {
     return (
-        <p style={{ margin: 0, fontWeight: 600, color: "#1f2937", fontSize: "0.95rem" }}>
-            {num}.&nbsp;&nbsp;{text}
+        <div className="filter-section-title" style={{ marginBottom: "0.625rem", margin: 0 }}>
+            {num}. {text}
             {italic && (
-                <span style={{ fontWeight: 400, fontStyle: "italic", color: "#6b7280", marginLeft: "0.35rem", fontSize: "0.875rem" }}>
+                <span style={{ fontWeight: 400, fontStyle: "italic", color: "#9ca3af", marginLeft: "0.5rem", letterSpacing: "normal", textTransform: "none" }}>
                     {italic}
                 </span>
             )}
-        </p>
+        </div>
     );
 }
 
@@ -527,71 +590,26 @@ function CheckboxItem({ label, checked, onChange, icon }: {
     label: string; checked: boolean; onChange: () => void; icon?: React.ReactNode;
 }) {
     return (
-        <label style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "0.5rem",
-            cursor: "pointer",
-            padding: "0.4rem 0.6rem",
-            borderRadius: "8px",
-            transition: "background 0.15s",
-            background: checked ? "#fce7f3" : "transparent",
-            userSelect: "none",
-        }}>
-            <div style={{
-                width: "18px",
-                height: "18px",
-                borderRadius: "5px",
-                border: `2px solid ${checked ? "#ec4899" : "#d1d5db"}`,
-                background: checked ? "#ec4899" : "white",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-                transition: "all 0.15s",
-            }}>
-                {checked && (
-                    <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
-                        <path d="M1 4L4 7.5L10 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                )}
-            </div>
-            <input type="checkbox" checked={checked} onChange={onChange} style={{ display: "none" }} />
-            {icon && <span style={{ color: checked ? "#ec4899" : "#9ca3af", display: "flex", alignItems: "center" }}>{icon}</span>}
-            <span style={{ fontSize: "0.875rem", color: "#374151" }}>{label}</span>
-        </label>
+        <button
+            type="button"
+            onClick={onChange}
+            className={`filter-chip ${checked ? 'active' : ''}`}
+        >
+            {icon && <span style={{ color: checked ? "#be185d" : "#9ca3af", display: "flex", alignItems: "center" }}>{icon}</span>}
+            {label}
+        </button>
     );
 }
 
 function RadioItem({ label, name, checked, onChange }: { label: string; name: string; checked: boolean; onChange: () => void }) {
     return (
-        <label style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "0.5rem",
-            cursor: "pointer",
-            padding: "0.4rem 0.6rem",
-            borderRadius: "8px",
-            background: checked ? "#fce7f3" : "transparent",
-            userSelect: "none",
-        }}>
-            <div style={{
-                width: "18px",
-                height: "18px",
-                borderRadius: "50%",
-                border: `2px solid ${checked ? "#ec4899" : "#d1d5db"}`,
-                background: "white",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-                transition: "all 0.15s",
-            }}>
-                {checked && <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#ec4899" }} />}
-            </div>
-            <input type="radio" name={name} checked={checked} onChange={onChange} style={{ display: "none" }} />
-            <span style={{ fontSize: "0.875rem", color: "#374151" }}>{label}</span>
-        </label>
+        <button
+            type="button"
+            onClick={onChange}
+            className={`filter-chip ${checked ? 'active' : ''}`}
+        >
+            {label}
+        </button>
     );
 }
 

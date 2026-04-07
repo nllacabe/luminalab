@@ -153,7 +153,7 @@ export default function MyProductsList({ products, onRefresh }: MyProductsListPr
 
 function formatType(type: string): string {
     const map: Record<string, string> = {
-        lip: "Lip", base: "Base", blush: "Blush", eyes: "Eyes",
+        lip: "Lip", base: "Base", blush: "Blush",
         foundation: "Foundation", concealer: "Concealer", lipstick: "Lipstick",
     };
     return map[type?.toLowerCase()] ?? type;

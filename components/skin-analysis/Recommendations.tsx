@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Briefcase, Heart, PartyPopper, Crown, CircleDot, Sun, X, ChevronDown } from "lucide-react";
+import { Briefcase, Heart, PartyPopper, Crown, CircleDot, Sun, X, SlidersHorizontal } from "lucide-react";
 import type { ProductMatch } from "@/lib/recommendations/product-matcher";
 import { getRecommendations, loadProductsCsv } from "@/lib/recommendations/product-matcher";
 import type { OwnedProductInput } from "@/lib/recommendations/product-matcher";
@@ -24,13 +24,28 @@ const OCCASION_ICONS: Record<string, React.ReactNode> = {
 };
 
 const OCCASION_ICONS_LG: Record<string, React.ReactNode> = {
-    Briefcase: <Briefcase size={22} />,
-    Heart: <Heart size={22} />,
-    PartyPopper: <PartyPopper size={22} />,
-    Crown: <Crown size={22} />,
-    CircleDot: <CircleDot size={22} />,
-    Sun: <Sun size={22} />,
+    Briefcase: <Briefcase size={20} />,
+    Heart: <Heart size={20} />,
+    PartyPopper: <PartyPopper size={20} />,
+    Crown: <Crown size={20} />,
+    CircleDot: <CircleDot size={20} />,
+    Sun: <Sun size={20} />,
 };
+
+const PRODUCT_TYPE_OPTIONS = [
+    { id: "foundation", label: "Base / Foundation" },
+    { id: "lipstick", label: "Lips / Lipstick" },
+    { id: "blush", label: "Cheeks / Blush" },
+    // { id: "other", label: "Eyes" },
+];
+
+const FINISH_OPTIONS = [
+    { id: "matte", label: "Matte" },
+    { id: "dewy", label: "Dewy" },
+    { id: "satin", label: "Satin" },
+    { id: "natural", label: "Natural" },
+    { id: "glossy", label: "Glossy" },
+];
 
 const PAGE_SIZE = 8;
 
@@ -43,13 +58,23 @@ export default function Recommendations({ userLab, onBack }: RecommendationsProp
     const [matches, setMatches] = useState<ProductMatch[]>([]);
     const [loading, setLoading] = useState(true);
     const [occasion, setOccasion] = useState<OccasionKey>("everyday");
-    const [showOccasionModal, setShowOccasionModal] = useState(false);
+    const [showFilterModal, setShowFilterModal] = useState(false);
     const [csvLoaded, setCsvLoaded] = useState(false);
     const [ownedProducts, setOwnedProducts] = useState<OwnedProductInput[]>([]);
     const [productTypes, setProductTypes] = useState<string[]>([]);
     const [preferredBrands, setPreferredBrands] = useState<string[]>([]);
+    const [finishes, setFinishes] = useState<string[]>([]);
+    const [budgetMin, setBudgetMin] = useState(0);
+    const [budgetMax, setBudgetMax] = useState(5000);
     const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
     const savedRef = useRef(false);
+
+    // Draft state for modal — so changes only apply on "Apply"
+    const [draftOccasion, setDraftOccasion] = useState<OccasionKey>("everyday");
+    const [draftProductTypes, setDraftProductTypes] = useState<string[]>([]);
+    const [draftFinishes, setDraftFinishes] = useState<string[]>([]);
+    const [draftBudgetMin, setDraftBudgetMin] = useState(0);
+    const [draftBudgetMax, setDraftBudgetMax] = useState(5000);
 
     useEffect(() => {
         async function init() {
@@ -68,11 +93,18 @@ export default function Recommendations({ userLab, onBack }: RecommendationsProp
                 const savedOccasion = (prefs?.occasion ?? "everyday") as OccasionKey;
                 const savedTypes = prefs?.product_types ?? [];
                 const savedBrands = prefs?.preferred_brands ?? [];
+                const savedFinishes = prefs?.finish_preferences ?? [];
+                const savedBudgetMin = prefs?.budget_min ?? 0;
+                const savedBudgetMax = prefs?.budget_max ?? 5000;
+
                 setOccasion(savedOccasion);
                 setProductTypes(savedTypes);
                 setPreferredBrands(savedBrands);
+                setFinishes(savedFinishes);
+                setBudgetMin(savedBudgetMin);
+                setBudgetMax(savedBudgetMax);
 
-                applyRecommendations(savedOccasion, ownedProds, savedTypes, savedBrands);
+                applyRecommendations(savedOccasion, ownedProds, savedTypes, savedBrands, savedFinishes, savedBudgetMin, savedBudgetMax);
             } catch (err) {
                 console.error("Failed to load products:", err);
                 setLoading(false);
@@ -82,12 +114,20 @@ export default function Recommendations({ userLab, onBack }: RecommendationsProp
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [userLab]);
 
-    function applyRecommendations(occ: OccasionKey, owned: OwnedProductInput[], types: string[], brands: string[]) {
+    function applyRecommendations(
+        occ: OccasionKey,
+        owned: OwnedProductInput[],
+        types: string[],
+        brands: string[],
+        fins: string[],
+        bMin: number,
+        bMax: number,
+    ) {
         setLoading(true);
         setVisibleCount(PAGE_SIZE);
         try {
-            const results = getRecommendations(userLab, 20, occ, types, brands, owned);
-            // No longer filtering out owned products — they're tagged with isOwned
+            const budgetRange = (bMin > 0 || bMax < 5000) ? { min: bMin, max: bMax } : undefined;
+            const results = getRecommendations(userLab, 20, occ, types, brands, owned, fins, budgetRange);
             const final = results.slice(0, 16);
             setMatches(final);
 
@@ -123,17 +163,62 @@ export default function Recommendations({ userLab, onBack }: RecommendationsProp
         }
     }
 
-    function handleOccasionChange(key: OccasionKey) {
-        setOccasion(key);
-        setShowOccasionModal(false);
+    function openFilterModal() {
+        // Sync draft with current state
+        setDraftOccasion(occasion);
+        setDraftProductTypes([...productTypes]);
+        setDraftFinishes([...finishes]);
+        setDraftBudgetMin(budgetMin);
+        setDraftBudgetMax(budgetMax);
+        setShowFilterModal(true);
+    }
+
+    function handleApplyFilters() {
+        setOccasion(draftOccasion);
+        setProductTypes(draftProductTypes);
+        setFinishes(draftFinishes);
+        setBudgetMin(draftBudgetMin);
+        setBudgetMax(draftBudgetMax);
+        setShowFilterModal(false);
         if (csvLoaded) {
-            applyRecommendations(key, ownedProducts, productTypes, preferredBrands);
+            applyRecommendations(draftOccasion, ownedProducts, draftProductTypes, preferredBrands, draftFinishes, draftBudgetMin, draftBudgetMax);
         }
     }
+
+    function handleResetFilters() {
+        setDraftOccasion("everyday");
+        setDraftProductTypes([]);
+        setDraftFinishes([]);
+        setDraftBudgetMin(0);
+        setDraftBudgetMax(5000);
+    }
+
+    function toggleDraftType(id: string) {
+        setDraftProductTypes(prev =>
+            prev.includes(id) ? prev.filter(v => v !== id) : [...prev, id]
+        );
+    }
+
+    function toggleDraftFinish(id: string) {
+        setDraftFinishes(prev =>
+            prev.includes(id) ? prev.filter(v => v !== id) : [...prev, id]
+        );
+    }
+
+    // Count active filters for badge
+    const activeFilterCount =
+        (occasion !== "everyday" ? 1 : 0) +
+        (productTypes.length > 0 ? 1 : 0) +
+        (finishes.length > 0 ? 1 : 0) +
+        ((budgetMin > 0 || budgetMax < 5000) ? 1 : 0);
 
     const occasionIntent = OCCASION_INTENT_MAP[occasion];
     const visibleMatches = matches.slice(0, visibleCount);
     const hasMore = visibleCount < matches.length;
+
+    // Budget bar fill
+    const minPct = (draftBudgetMin / 5000) * 100;
+    const maxPct = (draftBudgetMax / 5000) * 100;
 
     return (
         <>
@@ -158,45 +243,138 @@ export default function Recommendations({ userLab, onBack }: RecommendationsProp
                         gap: 0.75rem;
                     }
                 }
-                .occasion-modal-overlay {
+                .filter-modal-overlay {
                     position: fixed;
                     inset: 0;
-                    background: rgba(0,0,0,0.35);
+                    background: rgba(0,0,0,0.4);
                     z-index: 100;
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     padding: 1rem;
+                    backdrop-filter: blur(4px);
                 }
-                .occasion-modal {
+                .filter-modal {
                     background: #fff;
-                    border-radius: 20px;
+                    border-radius: 24px;
                     border: 2px solid #f9a8d4;
-                    padding: 1.75rem;
                     width: 100%;
-                    max-width: 480px;
-                    box-shadow: 0 8px 40px rgba(244,114,182,0.18);
+                    max-width: 520px;
+                    max-height: 85vh;
+                    box-shadow: 0 12px 48px rgba(244,114,182,0.2);
                     position: relative;
-                }
-                .occasion-option {
-                display: flex;
-                align-items: center;
-                gap: 0.75rem;
-                padding: 0.75rem 1rem;
-                border-radius: 12px;
-                cursor: pointer;
-                text-align: left;
-                transition: all 0.15s ease;
-            }
-            @media (max-width: 640px) {
-                .occasion-option {
+                    display: flex;
                     flex-direction: column;
-                    align-items: center;
-                    text-align: center;
-                    gap: 0.375rem;
-                    padding: 0.875rem 0.5rem;
+                    overflow: hidden;
                 }
-            }
+                .filter-modal-body {
+                    overflow-y: auto;
+                    flex: 1;
+                    padding: 1.25rem 1.5rem;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 1.25rem;
+                }
+                .filter-section-title {
+                    font-size: 0.75rem;
+                    font-weight: 700;
+                    text-transform: uppercase;
+                    letter-spacing: 0.08em;
+                    color: #9ca3af;
+                    margin-bottom: 0.625rem;
+                }
+                .filter-chip {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 0.375rem;
+                    padding: 0.5rem 0.875rem;
+                    border-radius: 999px;
+                    cursor: pointer;
+                    font-size: 0.8125rem;
+                    font-weight: 600;
+                    transition: all 0.15s ease;
+                    border: 1.5px solid #e5e7eb;
+                    background: #fff;
+                    color: #374151;
+                    user-select: none;
+                }
+                .filter-chip:hover {
+                    border-color: #f9a8d4;
+                    background: #fef2f8;
+                }
+                .filter-chip.active {
+                    border-color: #ec4899;
+                    background: linear-gradient(135deg, #fce7f3, #fbcfe8);
+                    color: #be185d;
+                    box-shadow: 0 2px 8px rgba(236,72,153,0.15);
+                }
+                .occasion-grid-option {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.625rem;
+                    padding: 0.625rem 0.75rem;
+                    border-radius: 12px;
+                    cursor: pointer;
+                    text-align: left;
+                    transition: all 0.15s ease;
+                    border: 1.5px solid #e5e7eb;
+                    background: #fff;
+                }
+                .occasion-grid-option:hover {
+                    border-color: #f9a8d4;
+                    background: #fef2f8;
+                }
+                .occasion-grid-option.active {
+                    border-color: #ec4899;
+                    background: linear-gradient(135deg, #fce7f3, #fbcfe8);
+                    box-shadow: 0 2px 8px rgba(236,72,153,0.12);
+                }
+                @media (max-width: 640px) {
+                    .occasion-grid-option {
+                        flex-direction: column;
+                        align-items: center;
+                        text-align: center;
+                        gap: 0.25rem;
+                        padding: 0.75rem 0.5rem;
+                    }
+                }
+
+                /* Dual range slider styling */
+                .dual-range-input {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    -webkit-appearance: none;
+                    appearance: none;
+                    background: transparent;
+                    pointer-events: none;
+                    cursor: pointer;
+                    margin: 0;
+                    padding: 0;
+                }
+                .dual-range-input::-webkit-slider-thumb {
+                    -webkit-appearance: none;
+                    width: 18px;
+                    height: 18px;
+                    border-radius: 50%;
+                    background: #ec4899;
+                    border: 2px solid #fff;
+                    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+                    pointer-events: auto;
+                    cursor: pointer;
+                }
+                .dual-range-input::-moz-range-thumb {
+                    width: 18px;
+                    height: 18px;
+                    border-radius: 50%;
+                    background: #ec4899;
+                    border: 2px solid #fff;
+                    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+                    pointer-events: auto;
+                    cursor: pointer;
+                }
             `}</style>
 
             <div style={{
@@ -214,7 +392,7 @@ export default function Recommendations({ userLab, onBack }: RecommendationsProp
                 <Sparkle top="85%" left="4%" size={14} delay={1.2} />
                 <Sparkle top="90%" right="6%" size={10} delay={0.5} />
 
-                {/* Title + occasion badge */}
+                {/* Title + filter badge */}
                 <div style={{ textAlign: "center", marginBottom: "1.25rem", position: "relative", zIndex: 1 }}>
                     <h1 style={{
                         fontSize: "1.75rem",
@@ -226,7 +404,7 @@ export default function Recommendations({ userLab, onBack }: RecommendationsProp
                     </h1>
 
                     <button
-                        onClick={() => setShowOccasionModal(true)}
+                        onClick={openFilterModal}
                         style={{
                             display: "inline-flex",
                             alignItems: "center",
@@ -238,19 +416,34 @@ export default function Recommendations({ userLab, onBack }: RecommendationsProp
                             backdropFilter: "blur(8px)",
                             cursor: "pointer",
                             boxShadow: "0 2px 8px rgba(244,114,182,0.12)",
+                            position: "relative",
                         }}
                     >
-                        <span style={{ color: "#be185d", display: "flex", alignItems: "center" }}>
-                            {OCCASION_ICONS[occasionIntent.icon]}
-                        </span>
+                        <SlidersHorizontal size={15} color="#be185d" />
                         <span style={{ fontSize: "0.875rem", fontWeight: 600, color: "#be185d" }}>
-                            {occasionIntent.label}
+                            Filter recommendations
                         </span>
-                        <ChevronDown size={14} color="#ec4899" />
+                        {activeFilterCount > 0 && (
+                            <span style={{
+                                background: "#ec4899",
+                                color: "#fff",
+                                fontSize: "0.625rem",
+                                fontWeight: 800,
+                                width: "18px",
+                                height: "18px",
+                                borderRadius: "50%",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                marginLeft: "0.125rem",
+                            }}>
+                                {activeFilterCount}
+                            </span>
+                        )}
                     </button>
                 </div>
 
-                {/* Back button — above grid, left-aligned */}
+                {/* Back button */}
                 <div style={{ maxWidth: "1100px", margin: "0 auto 0.75rem", position: "relative", zIndex: 1 }}>
                     <button
                         onClick={onBack}
@@ -276,12 +469,11 @@ export default function Recommendations({ userLab, onBack }: RecommendationsProp
                     <div className="rec-skeleton-grid" style={{ maxWidth: "1100px", margin: "0 auto", position: "relative", zIndex: 1 }}>
                         {Array.from({ length: PAGE_SIZE }).map((_, i) => (
                             <div key={i} style={{
-                                background: "rgba(255,255,255,0.6)",
-                                border: "2px solid #f9a8d4",
+                                background: "linear-gradient(180deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%)",
+                                backgroundSize: "100% 200%",
                                 borderRadius: "16px",
                                 height: "260px",
-                                opacity: 0.5,
-                                animation: `sparkle-pulse 1.5s ease-in-out ${i * 0.08}s infinite`,
+                                animation: "shimmer-vertical 1.8s ease-in-out infinite",
                             }} />
                         ))}
                     </div>
@@ -299,6 +491,37 @@ export default function Recommendations({ userLab, onBack }: RecommendationsProp
                                 />
                             ))}
                         </div>
+
+                        {/* No results message */}
+                        {matches.length === 0 && (
+                            <div style={{
+                                textAlign: "center",
+                                padding: "3rem 1rem",
+                                position: "relative",
+                                zIndex: 1,
+                            }}>
+                                <div style={{ fontSize: "2.5rem", marginBottom: "0.75rem", opacity: 0.5 }}>✦</div>
+                                <p style={{ color: "#6b7280", fontSize: "0.9375rem", fontWeight: 500 }}>
+                                    No products match your current filters.
+                                </p>
+                                <button
+                                    onClick={openFilterModal}
+                                    style={{
+                                        marginTop: "0.75rem",
+                                        padding: "0.5rem 1.5rem",
+                                        background: "none",
+                                        border: "1.5px solid #ec4899",
+                                        borderRadius: "8px",
+                                        color: "#ec4899",
+                                        fontWeight: 600,
+                                        fontSize: "0.875rem",
+                                        cursor: "pointer",
+                                    }}
+                                >
+                                    Adjust filters
+                                </button>
+                            </div>
+                        )}
 
                         {/* Load more */}
                         {hasMore && (
@@ -325,14 +548,14 @@ export default function Recommendations({ userLab, onBack }: RecommendationsProp
                 )}
             </div>
 
-            {/* Occasion modal */}
-            {showOccasionModal && (
+            {/* ── Filter Modal ──────────────────────────────────────────── */}
+            {showFilterModal && (
                 <div
-                    className="occasion-modal-overlay"
-                    onClick={() => setShowOccasionModal(false)}
+                    className="filter-modal-overlay"
+                    onClick={() => setShowFilterModal(false)}
                 >
                     <div
-                        className="occasion-modal"
+                        className="filter-modal"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Modal header */}
@@ -340,18 +563,18 @@ export default function Recommendations({ userLab, onBack }: RecommendationsProp
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "space-between",
-                            marginBottom: "1.25rem",
+                            padding: "1.25rem 1.5rem",
+                            borderBottom: "1px solid #fce7f3",
+                            flexShrink: 0,
                         }}>
-                            <div>
-                                <h2 style={{ fontWeight: 800, fontSize: "1.125rem", color: "#1f2937", margin: 0 }}>
-                                    Choose an occasion
+                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                <SlidersHorizontal size={18} color="#ec4899" />
+                                <h2 style={{ fontWeight: 800, fontSize: "1.0625rem", color: "#1f2937", margin: 0 }}>
+                                    Filter Recommendations
                                 </h2>
-                                <p style={{ fontSize: "0.8125rem", color: "#9ca3af", margin: "0.25rem 0 0" }}>
-                                    We&apos;ll tailor your shade recommendations.
-                                </p>
                             </div>
                             <button
-                                onClick={() => setShowOccasionModal(false)}
+                                onClick={() => setShowFilterModal(false)}
                                 style={{
                                     background: "none",
                                     border: "none",
@@ -360,45 +583,235 @@ export default function Recommendations({ userLab, onBack }: RecommendationsProp
                                     display: "flex",
                                     alignItems: "center",
                                     padding: "0.25rem",
+                                    borderRadius: "6px",
+                                    transition: "all 0.15s",
                                 }}
+                                onMouseEnter={e => { e.currentTarget.style.background = "#fce7f3"; e.currentTarget.style.color = "#ec4899"; }}
+                                onMouseLeave={e => { e.currentTarget.style.background = "none"; e.currentTarget.style.color = "#9ca3af"; }}
                             >
                                 <X size={20} />
                             </button>
                         </div>
 
-                        {/* Occasion options */}
-                        <div style={{
-                            display: "grid",
-                            gridTemplateColumns: "1fr 1fr",
-                            gap: "0.625rem",
-                        }}>
-                            {OCCASIONS.map(key => {
-                                const intent = OCCASION_INTENT_MAP[key];
-                                const isSelected = occasion === key;
-                                return (
-                                    <button
-                                        key={key}
-                                        onClick={() => handleOccasionChange(key)}
-                                        className="occasion-option"
-                                        style={{
-                                            border: `2px solid ${isSelected ? "#ec4899" : "#f9a8d4"}`,
-                                            background: isSelected ? "#fce7f3" : "#fff",
-                                        }}
-                                    >
-                                        <span style={{ color: isSelected ? "#be185d" : "#9ca3af", display: "flex", flexShrink: 0 }}>
-                                            {OCCASION_ICONS_LG[intent.icon]}
+                        {/* Scrollable body */}
+                        <div className="filter-modal-body">
+
+                            {/* ── Section 1: Budget ───────────────────────────── */}
+                            <div>
+                                <div className="filter-section-title">Budget Range</div>
+                                <div style={{
+                                    background: "#fef7ff",
+                                    borderRadius: "14px",
+                                    padding: "1rem 1.25rem",
+                                    border: "1px solid #fce7f3",
+                                }}>
+                                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+                                        <span style={{ fontSize: "0.8125rem", fontWeight: 600, color: "#6b7280" }}>
+                                            ₱{draftBudgetMin.toLocaleString()}
                                         </span>
-                                        <div>
-                                            <div style={{ fontSize: "0.875rem", fontWeight: 700, color: isSelected ? "#be185d" : "#1f2937" }}>
-                                                {intent.label}
-                                            </div>
-                                            <div style={{ fontSize: "0.6875rem", color: "#9ca3af", marginTop: "0.1rem" }}>
-                                                {intent.descriptor}
-                                            </div>
-                                        </div>
-                                    </button>
-                                );
-                            })}
+                                        <span style={{ fontSize: "0.8125rem", fontWeight: 600, color: "#6b7280" }}>
+                                            ₱{draftBudgetMax.toLocaleString()}
+                                        </span>
+                                    </div>
+                                    {/* Dual-thumb range */}
+                                    <div style={{ position: "relative", height: "24px" }}>
+                                        <div style={{
+                                            position: "absolute",
+                                            top: "50%",
+                                            left: 0,
+                                            right: 0,
+                                            height: "5px",
+                                            background: "#fce7f3",
+                                            borderRadius: "3px",
+                                            transform: "translateY(-50%)",
+                                        }} />
+                                        <div style={{
+                                            position: "absolute",
+                                            top: "50%",
+                                            left: `${minPct}%`,
+                                            width: `${maxPct - minPct}%`,
+                                            height: "5px",
+                                            background: "linear-gradient(90deg, #ec4899, #f472b6)",
+                                            borderRadius: "3px",
+                                            transform: "translateY(-50%)",
+                                        }} />
+                                        <input
+                                            type="range"
+                                            min={0}
+                                            max={5000}
+                                            step={50}
+                                            value={draftBudgetMin}
+                                            onChange={e => setDraftBudgetMin(Math.min(Number(e.target.value), draftBudgetMax - 50))}
+                                            className="dual-range-input"
+                                        />
+                                        <input
+                                            type="range"
+                                            min={0}
+                                            max={5000}
+                                            step={50}
+                                            value={draftBudgetMax}
+                                            onChange={e => setDraftBudgetMax(Math.max(Number(e.target.value), draftBudgetMin + 50))}
+                                            className="dual-range-input"
+                                        />
+                                    </div>
+                                    <p style={{
+                                        fontSize: "0.75rem",
+                                        color: "#ec4899",
+                                        fontWeight: 600,
+                                        marginTop: "0.375rem",
+                                        textAlign: "center",
+                                        margin: "0.375rem 0 0",
+                                    }}>
+                                        ₱{draftBudgetMin.toLocaleString()} — ₱{draftBudgetMax.toLocaleString()}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Divider */}
+                            <hr style={{ border: "none", borderTop: "1px solid #fce7f3", margin: 0 }} />
+
+                            {/* ── Section 2: Product Type ─────────────────────── */}
+                            <div>
+                                <div className="filter-section-title">Product Type</div>
+                                <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+                                    {PRODUCT_TYPE_OPTIONS.map(pt => (
+                                        <button
+                                            key={pt.id}
+                                            onClick={() => toggleDraftType(pt.id)}
+                                            className={`filter-chip ${draftProductTypes.includes(pt.id) ? "active" : ""}`}
+                                        >
+                                            {pt.label}
+                                        </button>
+                                    ))}
+                                </div>
+                                <p style={{ fontSize: "0.6875rem", color: "#9ca3af", marginTop: "0.375rem", fontStyle: "italic" }}>
+                                    Leave empty to show all types
+                                </p>
+                            </div>
+
+                            {/* Divider */}
+                            <hr style={{ border: "none", borderTop: "1px solid #fce7f3", margin: 0 }} />
+
+                            {/* ── Section 3: Occasion ─────────────────────────── */}
+                            <div>
+                                <div className="filter-section-title">Occasion</div>
+                                <div style={{
+                                    display: "grid",
+                                    gridTemplateColumns: "1fr 1fr",
+                                    gap: "0.5rem",
+                                }}>
+                                    {OCCASIONS.map(key => {
+                                        const intent = OCCASION_INTENT_MAP[key];
+                                        const isSelected = draftOccasion === key;
+                                        return (
+                                            <button
+                                                key={key}
+                                                onClick={() => setDraftOccasion(key)}
+                                                className={`occasion-grid-option ${isSelected ? "active" : ""}`}
+                                            >
+                                                <span style={{
+                                                    color: isSelected ? "#be185d" : "#9ca3af",
+                                                    display: "flex",
+                                                    flexShrink: 0,
+                                                }}>
+                                                    {OCCASION_ICONS_LG[intent.icon]}
+                                                </span>
+                                                <div>
+                                                    <div style={{
+                                                        fontSize: "0.8125rem",
+                                                        fontWeight: 700,
+                                                        color: isSelected ? "#be185d" : "#1f2937",
+                                                        lineHeight: 1.25,
+                                                    }}>
+                                                        {intent.label}
+                                                    </div>
+                                                    <div style={{
+                                                        fontSize: "0.625rem",
+                                                        color: isSelected ? "#db2777" : "#9ca3af",
+                                                        marginTop: "0.1rem",
+                                                        fontStyle: "italic",
+                                                    }}>
+                                                        {intent.descriptor}
+                                                    </div>
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            {/* Divider */}
+                            <hr style={{ border: "none", borderTop: "1px solid #fce7f3", margin: 0 }} />
+
+                            {/* ── Section 4: Finish ───────────────────────────── */}
+                            <div>
+                                <div className="filter-section-title">Finish Preference</div>
+                                <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+                                    {FINISH_OPTIONS.map(f => (
+                                        <button
+                                            key={f.id}
+                                            onClick={() => toggleDraftFinish(f.id)}
+                                            className={`filter-chip ${draftFinishes.includes(f.id) ? "active" : ""}`}
+                                        >
+                                            {f.label}
+                                        </button>
+                                    ))}
+                                </div>
+                                <p style={{ fontSize: "0.6875rem", color: "#9ca3af", marginTop: "0.375rem", fontStyle: "italic" }}>
+                                    Leave empty to show all finishes
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Modal footer */}
+                        <div style={{
+                            borderTop: "1px solid #fce7f3",
+                            padding: "1rem 1.5rem",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            gap: "0.75rem",
+                            flexShrink: 0,
+                            background: "rgba(255,255,255,0.95)",
+                        }}>
+                            <button
+                                onClick={handleResetFilters}
+                                style={{
+                                    background: "none",
+                                    border: "none",
+                                    color: "#9ca3af",
+                                    fontSize: "0.8125rem",
+                                    fontWeight: 600,
+                                    cursor: "pointer",
+                                    padding: "0.5rem 0.75rem",
+                                    borderRadius: "8px",
+                                    transition: "all 0.15s",
+                                }}
+                                onMouseEnter={e => { e.currentTarget.style.color = "#ec4899"; e.currentTarget.style.background = "#fef2f8"; }}
+                                onMouseLeave={e => { e.currentTarget.style.color = "#9ca3af"; e.currentTarget.style.background = "none"; }}
+                            >
+                                Reset all
+                            </button>
+                            <button
+                                onClick={handleApplyFilters}
+                                style={{
+                                    padding: "0.625rem 2rem",
+                                    background: "linear-gradient(135deg, #ec4899, #f472b6)",
+                                    border: "none",
+                                    borderRadius: "12px",
+                                    fontWeight: 700,
+                                    fontSize: "0.875rem",
+                                    color: "#fff",
+                                    cursor: "pointer",
+                                    boxShadow: "0 4px 16px rgba(236,72,153,0.3)",
+                                    transition: "all 0.2s ease",
+                                    letterSpacing: "0.02em",
+                                }}
+                                onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 6px 20px rgba(236,72,153,0.4)"; }}
+                                onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 4px 16px rgba(236,72,153,0.3)"; }}
+                            >
+                                Apply Filters
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -481,7 +894,7 @@ function ProductCard({ product, index }: { product: ProductMatch; index: number 
                 ) : (
                     <div style={{ fontSize: "2.5rem", opacity: 0.25 }}>💄</div>
                 )}
-                {/* Shade circle — larger */}
+                {/* Shade circle */}
                 <div style={{
                     position: "absolute",
                     bottom: "0.5rem",
@@ -552,7 +965,7 @@ function formatProductType(type: string): string {
         lip: "Lipstick",
         base: "Base",
         blush: "Blush",
-        eyes: "Eyes",
+        // eyes: "Eyes",
         foundation: "Foundation",
         concealer: "Concealer",
         lipstick: "Lipstick",

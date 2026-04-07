@@ -82,19 +82,7 @@ export async function detectFace(
 
     const landmarker = await getFaceLandmarker();
 
-    // Draw the image to a temporary canvas to avoid potential
-    // cross-origin / tainted-canvas issues with detect()
-    const canvas = document.createElement("canvas");
-    const w = image instanceof HTMLImageElement ? image.naturalWidth : image.width;
-    const h = image instanceof HTMLImageElement ? image.naturalHeight : image.height;
-    canvas.width = w;
-    canvas.height = h;
-
-    const ctx = canvas.getContext("2d");
-    if (!ctx) throw new Error("Could not create canvas context for detection.");
-    ctx.drawImage(image, 0, 0, w, h);
-
-    const result = landmarker.detect(canvas);
+    const result = landmarker.detect(image);
 
     if (!result.faceLandmarks || result.faceLandmarks.length === 0) {
         return null;
