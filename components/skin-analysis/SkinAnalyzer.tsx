@@ -98,8 +98,13 @@ export default function SkinAnalyzer({ onAnalysisComplete }: Props) {
                     border: "2px solid #f472b6",
                     borderRadius: "16px",
                     padding: "1.5rem",
-                    background: "rgba(255, 255, 255, 0.85)",
-                    backdropFilter: "blur(8px)",
+                    background: "rgba(255, 255, 255, 0.50)",
+                    backdropFilter: "blur(24px) saturate(160%)",
+                    WebkitBackdropFilter: "blur(24px) saturate(160%)",
+                    boxShadow: `
+  0 8px 32px rgba(0,0,0,0.08),
+  inset 0 1px 0 rgba(255,255,255,0.5)
+`,
                 }}>
                     <div
                         onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
@@ -153,7 +158,13 @@ export default function SkinAnalyzer({ onAnalysisComplete }: Props) {
                         border: "2px solid #f472b6",
                         borderRadius: "16px",
                         padding: "0.75rem",
-                        background: "#fff",
+                        background: "rgba(255, 255, 255, 0.50)",
+                        backdropFilter: "blur(24px) saturate(160%)",
+                        WebkitBackdropFilter: "blur(24px) saturate(160%)",
+                        boxShadow: `
+  0 8px 32px rgba(0,0,0,0.08),
+  inset 0 1px 0 rgba(255,255,255,0.5)
+`,
                         display: "flex",
                         flexDirection: "column",
                         alignItems: "center",
@@ -186,7 +197,7 @@ export default function SkinAnalyzer({ onAnalysisComplete }: Props) {
                                 onClick={reset}
                                 disabled={isProcessing}
                             >
-                                Remove
+                                Retake
                             </button>
                         </div>
                     </div>

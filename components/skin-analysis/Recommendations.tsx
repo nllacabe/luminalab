@@ -840,7 +840,13 @@ function ProductCard({ product, index }: { product: ProductMatch; index: number 
         <div
             className="animate-fade-in"
             style={{
-                background: "rgba(255,255,255,0.85)",
+                background: "rgba(255, 255, 255, 0.50)",
+                backdropFilter: "blur(24px) saturate(160%)",
+                WebkitBackdropFilter: "blur(24px) saturate(160%)",
+                boxShadow: `
+  0 8px 32px rgba(0,0,0,0.08),
+  inset 0 1px 0 rgba(255,255,255,0.5)
+`,
                 border: product.isOwned ? "2px solid #a78bfa" : "2px solid #f9a8d4",
                 borderRadius: "16px",
                 overflow: "hidden",
@@ -848,7 +854,6 @@ function ProductCard({ product, index }: { product: ProductMatch; index: number 
                 flexDirection: "column",
                 animationDelay: `${index * 0.05}s`,
                 transition: "transform 0.2s ease, box-shadow 0.2s ease",
-                backdropFilter: "blur(8px)",
                 position: "relative",
             }}
             onMouseEnter={(e) => {
@@ -903,7 +908,7 @@ function ProductCard({ product, index }: { product: ProductMatch; index: number 
                         style={{ width: "85%", height: "85%", objectFit: "contain" }}
                     />
                 ) : (
-                    <div style={{ fontSize: "2.5rem", opacity: 0.25 }}>💄</div>
+                    <div style={{ fontSize: "2.5rem", opacity: 0.25 }}>{getProductEmoji(product.productType)}</div>
                 )}
                 {/* Shade circle */}
                 <div style={{
@@ -982,4 +987,13 @@ function formatProductType(type: string): string {
         lipstick: "Lipstick",
     };
     return map[type.toLowerCase()] ?? type;
+}
+
+function getProductEmoji(type: string): string {
+    const t = type.toLowerCase();
+    if (t.includes("lip")) return "💄";
+    if (t.includes("found") || t.includes("base") || t.includes("conceal")) return "🧴";
+    if (t.includes("blush")) return "🌸";
+    if (t.includes("eye")) return "👁️";
+    return "✨";
 }

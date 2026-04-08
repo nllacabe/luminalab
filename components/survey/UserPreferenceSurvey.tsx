@@ -119,16 +119,20 @@ export default function UserPreferenceSurvey({ brands, initialPrefs, onComplete,
 
     const inner = (
         <div style={{
-            background: "rgba(255,255,255,0.92)",
+            background: "rgba(255, 255, 255, 0.50)",
+            backdropFilter: "blur(24px) saturate(160%)",
+            WebkitBackdropFilter: "blur(24px) saturate(160%)",
+            boxShadow: `
+  0 8px 32px rgba(0,0,0,0.08),
+  inset 0 1px 0 rgba(255,255,255,0.5)
+`,
             borderRadius: "24px",
             border: "2px solid #f9a8d4",
-            boxShadow: "0 8px 40px rgba(236,72,153,0.12)",
             width: "100%",
             maxWidth: "780px",
             maxHeight: isOverlay ? "85vh" : undefined,
             display: "flex",
             flexDirection: "column",
-            backdropFilter: "blur(12px)",
             position: "relative",
             overflow: "hidden",
         }}>
@@ -530,7 +534,6 @@ export default function UserPreferenceSurvey({ brands, initialPrefs, onComplete,
                 justifyContent: "center",
                 gap: "1rem",
                 flexShrink: 0,
-                background: "rgba(255,255,255,0.95)",
             }}>
                 <button
                     onClick={handleSkipOrCancel}

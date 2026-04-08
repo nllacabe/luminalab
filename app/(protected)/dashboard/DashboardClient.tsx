@@ -72,10 +72,9 @@ export default function DashboardClient({ userEmail, showSurvey, brands, prefs, 
     const customCount = products.filter(p => p.source === "custom").length;
     const typeCount = new Set(products.map(p => p.productType)).size;
 
-    // On mobile: show 2 products max in a 2-col grid
-    // On tablet/desktop: show 4 in a row
-    const recentCols = isMobile ? 2 : 4;
-    const recentVisible = isMobile ? recentProducts.slice(0, 2) : recentProducts;
+    // On all devices, load up to 4 recent products. 
+    // Mobile will use horizontal scrolling.
+    const recentVisible = recentProducts;
 
     return (
         <div className="page-wrapper">
@@ -278,37 +277,61 @@ export default function DashboardClient({ userEmail, showSurvey, brands, prefs, 
                         </div>
 
                         {recentVisible.length > 0 ? (
-                            <div style={{
-                                display: "grid",
-                                gridTemplateColumns: `repeat(${recentCols}, 1fr)`,
-                                gap: isMobile ? "0.625rem" : "0.875rem",
-                            }}>
+                            <div
+                                className="recent-products-scroll"
+                                style={{
+                                    display: "grid",
+                                    gridTemplateColumns: isMobile ? "none" : "repeat(4, 1fr)",
+                                    gridAutoFlow: isMobile ? "column" : "row",
+                                    gridAutoColumns: isMobile ? "calc(46vw - 1rem)" : "auto",
+                                    gap: isMobile ? "0.625rem" : "0.875rem",
+                                    overflowX: isMobile ? "auto" : "visible",
+                                    paddingBottom: isMobile ? "0.5rem" : 0,
+                                    scrollSnapType: isMobile ? "x mandatory" : "none",
+                                    marginRight: isMobile ? "-1.25rem" : 0, // negative margin so scroll bleeds to edge
+                                    paddingRight: isMobile ? "1.25rem" : 0,
+                                }}
+                            >
+                                <style>{`
+                                    .recent-products-scroll::-webkit-scrollbar {
+                                        display: none;
+                                    }
+                                    .recent-products-scroll {
+                                        -ms-overflow-style: none;  /* IE and Edge */
+                                        scrollbar-width: none;  /* Firefox */
+                                    }
+                                `}</style>
                                 {recentVisible.map(p => (
-                                    <ProductMiniCard key={p.id} product={p} />
+                                    <div key={p.id} style={{ scrollSnapAlign: "start", height: "100%" }}>
+                                        <ProductMiniCard product={p} />
+                                    </div>
                                 ))}
-                                {/* Add product slot — only show if we have room */}
-                                {recentVisible.length < recentCols && (
-                                    <Link href="/my-products" style={{ textDecoration: "none" }}>
-                                        <div style={{
-                                            background: "rgba(255,255,255,0.6)",
-                                            border: "2px dashed #f9a8d4",
-                                            borderRadius: "16px",
-                                            display: "flex",
-                                            flexDirection: "column",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            gap: "0.4rem",
-                                            cursor: "pointer",
-                                            minHeight: "140px",
-                                            transition: "background 0.15s",
-                                        }}
-                                            onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.background = "#fdf2f8"; }}
-                                            onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.6)"; }}
-                                        >
-                                            <span style={{ fontSize: "1.5rem", color: "#f9a8d4" }}>+</span>
-                                            <span style={{ fontSize: "0.75rem", color: "#9ca3af" }}>Add product</span>
-                                        </div>
-                                    </Link>
+                                {/* Add product slot — only show if we have room (max 4) */}
+                                {recentVisible.length < 4 && (
+                                    <div style={{ scrollSnapAlign: "start", height: "100%" }}>
+                                        <Link href="/my-products" style={{ textDecoration: "none", height: "100%", display: "block" }}>
+                                            <div style={{
+                                                background: "rgba(255,255,255,0.6)",
+                                                border: "2px dashed #f9a8d4",
+                                                borderRadius: "16px",
+                                                display: "flex",
+                                                flexDirection: "column",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                gap: "0.4rem",
+                                                cursor: "pointer",
+                                                height: "100%",
+                                                minHeight: "140px",
+                                                transition: "background 0.15s",
+                                            }}
+                                                onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.background = "#fdf2f8"; }}
+                                                onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.6)"; }}
+                                            >
+                                                <span style={{ fontSize: "1.5rem", color: "#f9a8d4" }}>+</span>
+                                                <span style={{ fontSize: "0.75rem", color: "#9ca3af" }}>Add product</span>
+                                            </div>
+                                        </Link>
+                                    </div>
                                 )}
                             </div>
                         ) : (
@@ -434,6 +457,8 @@ function ProductMiniCard({ product }: { product: UserProduct }) {
             flexDirection: "column",
             alignItems: "center",
             gap: "0.4rem",
+            height: "100%",
+            boxSizing: "border-box",
             transition: "transform 0.15s ease, box-shadow 0.15s ease",
         }}
             onMouseEnter={e => {
@@ -455,9 +480,9 @@ function ProductMiniCard({ product }: { product: UserProduct }) {
                     flexShrink: 0,
                 }} />
             ) : (
-                <div style={{ fontSize: "1.5rem" }}>💄</div>
+                <div style={{ fontSize: "1.5rem" }}>{getProductEmoji(product.productType)}</div>
             )}
-            <p style={{ fontSize: "0.6875rem", color: "#9ca3af", textAlign: "center" }}>
+            <p style={{ fontSize: "0.6875rem", color: "#9ca3af", textAlign: "center", marginTop: "auto" }}>
                 {product.brandName}
             </p>
             <p style={{
@@ -477,6 +502,7 @@ function ProductMiniCard({ product }: { product: UserProduct }) {
                 padding: "0.125rem 0.5rem",
                 borderRadius: "999px",
                 border: "1px solid #f9a8d4",
+                marginTop: "0.25rem",
             }}>
                 {product.source === "catalog" ? "Owned" : "Custom"}
             </span>
@@ -748,7 +774,7 @@ function RecProductMini({ product }: { product: RecommendationSessionProduct }) 
                     flexShrink: 0,
                 }} />
             ) : (
-                <div style={{ fontSize: "1.25rem" }}>💄</div>
+                <div style={{ fontSize: "1.25rem" }}>{getProductEmoji(product.productType)}</div>
             )}
             <p style={{ fontSize: "0.625rem", color: "#9ca3af", textAlign: "center", margin: 0, lineHeight: 1.2 }}>
                 {product.brandName}
@@ -814,3 +840,12 @@ const pinkOutlineBtnStyle: React.CSSProperties = {
     cursor: "pointer",
     transition: "background 0.15s",
 };
+
+function getProductEmoji(type: string | undefined): string {
+    const t = (type || "").toLowerCase();
+    if (t.includes("lip")) return "💄";
+    if (t.includes("found") || t.includes("base") || t.includes("conceal")) return "🧴";
+    if (t.includes("blush")) return "🌸";
+    if (t.includes("eye")) return "👁️";
+    return "✨";
+}

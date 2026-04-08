@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { RefreshCcw, Zap, ZapOff } from "lucide-react";
+import { RefreshCcw, Zap, ZapOff, Sun, LightbulbOff, Glasses, Focus } from "lucide-react";
 import { detectFace } from "@/lib/analysis/mediapipe";
 
 type LightingLevel = "too-dark" | "moderate" | "good" | "too-bright";
@@ -190,7 +190,7 @@ export default function CameraCapture({ onCapture, onCancel }: CameraCaptureProp
                 const avgBrightness = totalBrightness / pixelCount;
                 setLighting(classifyLighting(avgBrightness));
 
-                const detection = await detectFace(canvas);
+                const detection = await detectFace(video);
                 setFaceCount(detection ? detection.faceLandmarks.length : 0);
             } catch (err) {
                 console.error("Frame analysis error:", err);
@@ -283,71 +283,87 @@ export default function CameraCapture({ onCapture, onCancel }: CameraCaptureProp
 
     return (
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-            {/* Context Indicators */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                {/* Lighting indicator */}
-                {lighting && (
-                    <div
-                        className="lighting-indicator animate-fade-in"
-                        style={{
-                            borderColor: `color-mix(in srgb, ${lighting.color} 30%, transparent)`,
-                            background: `color-mix(in srgb, ${lighting.color} 8%, var(--card))`,
-                        }}
-                    >
-                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                            <span
-                                className="lighting-dot"
-                                style={{ background: lighting.color }}
-                            />
-                            <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>
-                                {lighting.label}
-                            </span>
-                        </div>
-                        <p
-                            style={{
-                                fontSize: "0.8125rem",
-                                color: "var(--muted-foreground)",
-                                margin: 0,
-                            }}
-                        >
-                            {lighting.hint}
-                        </p>
-                    </div>
-                )}
 
-                {/* Face count indicator */}
-                {faceCount !== null && faceCount !== 1 && (
-                    <div
-                        className="lighting-indicator animate-fade-in"
-                        style={{
-                            borderColor: `color-mix(in srgb, #d94f4f 30%, transparent)`,
-                            background: `color-mix(in srgb, #d94f4f 8%, var(--card))`,
-                        }}
-                    >
-                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                            <span
-                                className="lighting-dot"
-                                style={{ background: "#d94f4f" }}
-                            />
-                            <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>
-                                {faceCount === 0 ? "No Face Detected" : "Multiple Faces Detected"}
-                            </span>
-                        </div>
-                        <p
-                            style={{
-                                fontSize: "0.8125rem",
-                                color: "var(--muted-foreground)",
-                                margin: 0,
-                            }}
-                        >
-                            {faceCount === 0 ? "Please make sure your face is in the frame." : "Please make sure only one person is in the frame."}
-                        </p>
-                    </div>
-                )}
-            </div>
 
             {/* Viewfinder */}
-            <div className="camera-viewfinder" style={{ position: "relative" }}>
+            <div className="camera-viewfinder" style={{ position: "relative", overflow: "hidden", borderRadius: "calc(var(--radius) + 0.125rem)" }}>
+                {/* Context Indicators Overlay */}
+                <div style={{
+                    position: "absolute",
+                    top: "1rem",
+                    left: "1rem",
+                    maxWidth: "calc(100% - 6rem)",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "0.5rem",
+                    zIndex: 20,
+                    pointerEvents: "none",
+                    alignItems: "flex-start"
+                }}>
+                    {/* Lighting indicator */}
+                    {lighting && (
+                        <div
+                            className="lighting-indicator animate-fade-in"
+                            style={{
+                                borderColor: `color-mix(in srgb, ${lighting.color} 30%, transparent)`,
+                                background: `color-mix(in srgb, ${lighting.color} 8%, var(--card))`,
+                                backdropFilter: "blur(8px)",
+                                WebkitBackdropFilter: "blur(8px)",
+                            }}
+                        >
+                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                <span
+                                    className="lighting-dot"
+                                    style={{ background: lighting.color }}
+                                />
+                                <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>
+                                    {lighting.label}
+                                </span>
+                            </div>
+                            <p
+                                style={{
+                                    fontSize: "0.8125rem",
+                                    color: "var(--muted-foreground)",
+                                    margin: 0,
+                                }}
+                            >
+                                {lighting.hint}
+                            </p>
+                        </div>
+                    )}
+
+                    {/* Face count indicator */}
+                    {faceCount !== null && faceCount !== 1 && (
+                        <div
+                            className="lighting-indicator animate-fade-in"
+                            style={{
+                                borderColor: `color-mix(in srgb, #d94f4f 30%, transparent)`,
+                                background: `color-mix(in srgb, #d94f4f 8%, var(--card))`,
+                                backdropFilter: "blur(8px)",
+                                WebkitBackdropFilter: "blur(8px)",
+                            }}
+                        >
+                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                <span
+                                    className="lighting-dot"
+                                    style={{ background: "#d94f4f" }}
+                                />
+                                <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>
+                                    {faceCount === 0 ? "No Face Detected" : "Multiple Faces Detected"}
+                                </span>
+                            </div>
+                            <p
+                                style={{
+                                    fontSize: "0.8125rem",
+                                    color: "var(--muted-foreground)",
+                                    margin: 0,
+                                }}
+                            >
+                                {faceCount === 0 ? "Please make sure your face is in the frame." : "Please make sure only one person is in the frame."}
+                            </p>
+                        </div>
+                    )}
+                </div>
                 <video
                     ref={videoRef}
                     playsInline
@@ -452,15 +468,56 @@ export default function CameraCapture({ onCapture, onCancel }: CameraCaptureProp
             )}
 
             {/* Lighting tips */}
-            <div className="lighting-tips">
-                <p style={{ fontWeight: 600, fontSize: "0.8125rem", marginBottom: "0.5rem" }}>
-                    💡 Tips for best results
+            <div style={{
+                background: "linear-gradient(135deg, #ffffffff, #fbe5f1ff)",
+                borderRadius: "16px",
+                padding: "1.25rem",
+                border: "1px solid #fbcfe8",
+                boxShadow: "0 4px 12px rgba(244,114,182,0.1)"
+            }}>
+                <p style={{
+                    fontWeight: 700,
+                    fontSize: "0.9375rem",
+                    marginBottom: "0.875rem",
+                    color: "#ec4899",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.375rem"
+                }}>
+                    <img src="/icon.png" alt="" width={20} height={20} style={{ display: "inline-block", verticalAlign: "middle" }} /> Before you snap!
                 </p>
-                <ul>
-                    <li>Face a window for natural, even lighting</li>
-                    <li>Avoid harsh overhead lights that create shadows</li>
-                    <li>Remove glasses to prevent reflections</li>
-                    <li>Keep your face centered in the frame</li>
+                <ul style={{
+                    listStyle: "none",
+                    padding: 0,
+                    margin: 0,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "0.75rem"
+                }}>
+                    <li style={{ display: "flex", alignItems: "center", gap: "0.625rem", color: "#4b5563", fontSize: "0.875rem", fontWeight: 500 }}>
+                        <span style={{ display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "#f9a8d4", color: "white", borderRadius: "8px", padding: "4px" }}>
+                            <Sun size={14} strokeWidth={2.5} />
+                        </span>
+                        <span>Face a window for natural, even lighting</span>
+                    </li>
+                    <li style={{ display: "flex", alignItems: "center", gap: "0.625rem", color: "#4b5563", fontSize: "0.875rem", fontWeight: 500 }}>
+                        <span style={{ display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "#f9a8d4", color: "white", borderRadius: "8px", padding: "4px" }}>
+                            <LightbulbOff size={14} strokeWidth={2.5} />
+                        </span>
+                        <span>Avoid harsh overhead lights that create shadows</span>
+                    </li>
+                    <li style={{ display: "flex", alignItems: "center", gap: "0.625rem", color: "#4b5563", fontSize: "0.875rem", fontWeight: 500 }}>
+                        <span style={{ display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "#f9a8d4", color: "white", borderRadius: "8px", padding: "4px" }}>
+                            <Glasses size={14} strokeWidth={2.5} />
+                        </span>
+                        <span>Remove glasses to prevent reflections</span>
+                    </li>
+                    <li style={{ display: "flex", alignItems: "center", gap: "0.625rem", color: "#4b5563", fontSize: "0.875rem", fontWeight: 500 }}>
+                        <span style={{ display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "#f9a8d4", color: "white", borderRadius: "8px", padding: "4px" }}>
+                            <Focus size={14} strokeWidth={2.5} />
+                        </span>
+                        <span>Keep your face centered in the frame</span>
+                    </li>
                 </ul>
             </div>
         </div>

@@ -71,7 +71,7 @@ export interface NormalizedLandmark {
  * @returns The full `FaceLandmarkerResult`, or `null` if no face was found.
  */
 export async function detectFace(
-    image: HTMLImageElement | HTMLCanvasElement
+    image: HTMLImageElement | HTMLCanvasElement | HTMLVideoElement | ImageData
 ): Promise<FaceLandmarkerResult | null> {
     // Ensure image is actually loaded and has pixels
     if (image instanceof HTMLImageElement) {
@@ -82,7 +82,7 @@ export async function detectFace(
 
     const landmarker = await getFaceLandmarker();
 
-    const result = landmarker.detect(image);
+    const result = landmarker.detect(image as any);
 
     if (!result.faceLandmarks || result.faceLandmarks.length === 0) {
         return null;

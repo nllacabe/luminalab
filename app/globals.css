@@ -577,7 +577,12 @@ body {
     text-align: center;
     cursor: pointer;
     transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
-    background: rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.50);
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
 .upload-zone:hover {
@@ -632,11 +637,15 @@ body {
 /* ─── My Products Feature ────────────────────────── */
 
 .add-product-section {
-    background: rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.50);
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
     border: 2px solid #f9a8d4;
     border-radius: 16px;
     padding: 1.5rem;
-    backdrop-filter: blur(8px);
 }
 
 .search-results-grid {
@@ -716,7 +725,12 @@ body {
 }
 
 .my-product-card {
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.50);
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
     border: 1.5px solid #f9a8d4;
     border-radius: 14px;
     overflow: hidden;

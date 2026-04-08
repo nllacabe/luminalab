@@ -46,7 +46,12 @@ export default function AnalysisResults({
                     border: 2px solid #f472b6;
                     border-radius: 12px;
                     padding: 1.5rem;
-                    background: #fff;
+                    background: rgba(255, 255, 255, 0.50);
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
                     display: flex;
                     flex-direction: column;
                     align-items: center;
@@ -59,8 +64,13 @@ export default function AnalysisResults({
                     display: flex;
                     gap: 0.375rem;
                     justify-content: center;
+                    background: rgba(255, 255, 255, 0.50);
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
                 }
-
                 @media (max-width: 640px) {
                     .analysis-main-grid {
                         grid-template-columns: 1fr;
@@ -74,7 +84,12 @@ export default function AnalysisResults({
                         border: 2px solid #f472b6;
                         border-radius: 12px;
                         padding: 1.5rem;
-                        background: #fff;
+                        background: rgba(255, 255, 255, 0.50);
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
                         gap: 1rem;
                         align-items: center;
                     }
@@ -85,6 +100,12 @@ export default function AnalysisResults({
                         flex-direction: column;
                         align-items: center;
                         gap: 0.25rem;
+                        background: rgba(255, 255, 255, 0.50);
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
                     }
                 }
             `}</style>
@@ -251,11 +272,21 @@ function ProfileContent({ result }: { result: SkinAnalysisResult }) {
     const toneLabel = skinToneLabel(result.skinToneCategory).toLowerCase();
     const undertoneLabel = getUndertone(result.averageLab.a, result.averageLab.b);
 
+    const itaCategories = [
+        { label: "Very Light", range: "> 55°" },
+        { label: "Light", range: "41° to 55°" },
+        { label: "Intermediate", range: "28° to 41°" },
+        { label: "Tan", range: "10° to 28°" },
+        { label: "Brown", range: "-30° to 10°" },
+        { label: "Dark", range: "< -30°" }
+    ];
+
     return (
         <>
             <h2 style={{
                 fontWeight: 800,
-                fontSize: "1.25rem",
+                fontFamily: "var(--font-instrument-serif), serif",
+                fontSize: "1.75rem",
                 color: "#ec4899",
                 fontStyle: "italic",
                 margin: 0,
@@ -263,47 +294,80 @@ function ProfileContent({ result }: { result: SkinAnalysisResult }) {
                 Your skin profile
             </h2>
 
-            {/* ITA° category */}
-            <div style={{ textAlign: "center", width: "100%", marginBottom: "0.5rem" }}>
-                <h3 style={{ fontWeight: 700, fontSize: "1.125rem", color: "#1f2937", margin: "0 0 0.25rem 0" }}>
-                    ITA° Category
-                </h3>
-                <p style={{ fontSize: "0.9375rem", color: "#6b7280", margin: "0 0 0.5rem 0" }}>
-                    {skinToneLabel(result.skinToneCategory)}
-                </p>
+            {/* ITA° category & Swatch */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%", marginBottom: "1rem" }}>
                 <div style={{
                     width: "100%",
-                    height: "64px",
+                    height: "48px",
                     borderRadius: "10px",
                     backgroundColor: result.hexColor,
                     border: "2px solid #f9a8d4",
                     boxShadow: `0 4px 20px ${result.hexColor}33`,
+                    marginBottom: "0.625rem",
                 }} />
+                <span style={{ fontSize: "1rem", fontWeight: 800, color: "#ec4899", lineHeight: 1, letterSpacing: "-0.02em" }}>
+                    {skinToneLabel(result.skinToneCategory)}
+                </span>
+            </div>
+
+            {/* ITA° Angle visual scale */}
+            <div style={{ width: "100%", marginBottom: "1.25rem" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "0.375rem" }}>
+                    <span style={{ fontSize: "0.65rem", color: "#9ca3af", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>Skin Tone Spectrum</span>
+                    <span style={{ fontSize: "0.875rem", color: "#ec4899", fontWeight: 700, fontFamily: "monospace" }}>ITA° {result.itaAngle.toFixed(2)}°</span>
+                </div>
+
+                <div style={{ position: "relative", width: "100%", height: "12px", borderRadius: "6px", display: "flex", overflow: "hidden", border: "1px solid #e5e7eb" }}>
+                    {itaCategories.map((cat) => {
+                        let bg = "#fff";
+                        let w = 10;
+                        if (cat.label === "Very Light") { bg = "#fef3e7"; w = (15 / 120) * 100; }
+                        else if (cat.label === "Light") { bg = "#f8d5b8"; w = (14 / 120) * 100; }
+                        else if (cat.label === "Intermediate") { bg = "#dfa373"; w = (13 / 120) * 100; }
+                        else if (cat.label === "Tan") { bg = "#bc7747"; w = (18 / 120) * 100; }
+                        else if (cat.label === "Brown") { bg = "#8b4f2c"; w = (40 / 120) * 100; }
+                        else if (cat.label === "Dark") { bg = "#472413"; w = (20 / 120) * 100; }
+                        return <div key={cat.label} style={{ width: `${w}%`, height: "100%", backgroundColor: bg }} title={cat.label} />;
+                    })}
+                    <div style={{
+                        position: "absolute", top: -1, bottom: -1, width: "4px", backgroundColor: "#ec4899",
+                        borderRadius: "2px", left: `calc(${Math.min(100, Math.max(0, ((70 - result.itaAngle) / 120) * 100))}% - 2px)`,
+                        boxShadow: "0 0 0 2px #fff"
+                    }} />
+                </div>
             </div>
 
             {/* CIELAB values */}
-            <div style={{ textAlign: "center", width: "100%", marginBottom: "0.5rem" }}>
-                <div style={{ marginBottom: "0.75rem" }}>
-                    <h3 style={{ fontWeight: 700, fontSize: "1.125rem", color: "#1f2937", margin: "0 0 0.25rem 0" }}>
-                        CIELAB Values
-                    </h3>
-                    <button
-                        onClick={() => setShowLabInfo(true)}
-                        style={{
-                            background: "none", border: "none", color: "#ec4899",
-                            textDecoration: "underline", fontWeight: "bold it", fontStyle: "italic", fontSize: "0.8125rem",
-                            cursor: "pointer", padding: 0
-                        }}
-                    >
-                        What does this mean?
-                    </button>
+            <div style={{ textAlign: "center", width: "100%" }}>
+                <div style={{ fontSize: "0.65rem", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.5rem" }}>
+                    Color Values
                 </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.625rem" }}>
+                    <LabValueBox label="L" value={result.averageLab.L.toFixed(2)} axisColor="linear-gradient(135deg, #f3f4f6 0%, #9ca3af 100%)" />
+                    <LabValueBox label="a" value={result.averageLab.a.toFixed(2)} axisColor="linear-gradient(135deg, #10b981 0%, #ef4444 100%)" />
+                    <LabValueBox label="b" value={result.averageLab.b.toFixed(2)} axisColor="linear-gradient(135deg, #3b82f6 0%, #eab308 100%)" />
+                </div>
+            </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.625rem", marginBottom: "0.75rem" }}>
-                    <LabValueBox label="L" value={result.averageLab.L.toFixed(2)} />
-                    <LabValueBox label="a" value={result.averageLab.a.toFixed(2)} />
-                    <LabValueBox label="b" value={result.averageLab.b.toFixed(2)} />
-                </div>
+            {/* What does this mean? */}
+            <div style={{ textAlign: "center", width: "100%", marginTop: "0.25rem" }}>
+                <button
+                    className="btn btn-secondary"
+                    onClick={() => setShowLabInfo(true)}
+                    style={{
+                        background: "transparent",
+                        border: "1.5px solid #ec4899",
+                        color: "#ec4899",
+                        borderRadius: "9999px",
+                        fontWeight: 700,
+                        fontSize: "0.8125rem",
+                        padding: "0.5rem 1.25rem",
+                        cursor: "pointer",
+                        transition: "all 0.2s"
+                    }}
+                >
+                    What does this mean?
+                </button>
             </div>
 
             {showLabInfo && mounted && createPortal(
@@ -325,72 +389,83 @@ function ProfileContent({ result }: { result: SkinAnalysisResult }) {
                         color: "#4b5563",
                         textAlign: "left",
                         background: "#fff",
-                        padding: "1.5rem",
                         borderRadius: "16px",
                         border: "1px solid #e5e7eb",
                         boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
                         maxWidth: "400px",
                         width: "100%",
+                        maxHeight: "90vh",
+                        display: "flex",
+                        flexDirection: "column",
+                        overflow: "hidden",
                     }} onClick={e => e.stopPropagation()}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-                            <h4 style={{ margin: 0, color: "#1f2937", fontSize: "1.25rem", fontWeight: 800 }}>CIELAB Color Space</h4>
-                            <button onClick={() => setShowLabInfo(false)} style={{ background: "none", border: "none", fontSize: "1.5rem", cursor: "pointer", color: "#9ca3af", lineHeight: 1 }}>&times;</button>
-                        </div>
+                        <div style={{ padding: "1.5rem", overflowY: "auto" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+                                <h4 style={{ margin: 0, color: "#1f2937", fontSize: "1.25rem", fontWeight: 700 }}>Profile Explained</h4>
+                                <button onClick={() => setShowLabInfo(false)} style={{ background: "none", border: "none", fontSize: "1.5rem", cursor: "pointer", color: "#9ca3af", lineHeight: 1 }}>&times;</button>
+                            </div>
 
-                        <div style={{ marginBottom: "1rem" }}>
-                            <p style={{ margin: 0, color: "#374151" }}>
-                                <strong>Why we use this:</strong> CIELAB mathematically maps human color perception. By capturing your precise a* and b* coordinates, we can calculate your exact undertone and find makeup shades that harmonize with your skin perfectly.
-                            </p>
-                        </div>
+                            <div style={{ marginBottom: "1rem" }}>
+                                <p style={{ margin: 0, color: "#4b5563", fontSize: "0.875rem" }}>
+                                    <strong>ITA° Category: </strong>The Individual Typology Angle (ITA°) measures the relationship between skin lightness and undertone.
+                                </p>
+                                <div style={{ marginTop: "0.75rem", fontSize: "0.8125rem", display: "flex", flexDirection: "column", gap: "0.2rem" }}>
+                                    {itaCategories.map(cat => {
+                                        const isMatch = cat.label.toLowerCase() === toneLabel;
+                                        return (
+                                            <div key={cat.label} style={{
+                                                display: "flex",
+                                                justifyContent: "space-between",
+                                                padding: "0.375rem 0.5rem",
+                                                borderRadius: "6px",
+                                                background: isMatch ? "#fdf2f8" : "transparent",
+                                                border: isMatch ? "1px solid #f9a8d4" : "1px solid transparent",
+                                                fontWeight: isMatch ? 700 : 400,
+                                                color: isMatch ? "#ec4899" : "#4b5563",
+                                            }}>
+                                                <span>{cat.label}</span>
+                                                <span>{cat.range}</span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
 
-                        <div style={{ marginBottom: "1rem", paddingTop: "1rem", borderTop: "1px solid #e5e7eb" }}>
-                            {/* <h5 style={{ margin: "0 0 0.5rem 0", color: "#1f2937", fontSize: "0.9375rem" }}>Value Breakdown</h5> */}
-                            <p style={{ margin: "0 0 0.375rem 0" }}><strong>L (Lightness):</strong> 0 (black) to 100 (white)</p>
-                            <p style={{ margin: "0 0 0.375rem 0" }}><strong>a (Green-Red):</strong> Negative is cooler/green, positive is warmer/red</p>
-                            <p style={{ margin: 0 }}><strong>b (Blue-Yellow):</strong> Negative is cooler/blue, positive is warmer/yellow</p>
-                        </div>
+                            <div style={{ marginBottom: "1rem", paddingTop: "1rem", borderTop: "1px solid #e5e7eb" }}>
+                                <p style={{ margin: 0, color: "#4b5563", fontSize: "0.875rem" }}>
+                                    <strong>ITA° Angle: </strong>Your specific angle is <strong>{result.itaAngle.toFixed(2)}°</strong>, which places you in the <span style={{ color: "#ec4899", fontWeight: 600 }}>{skinToneLabel(result.skinToneCategory)}</span> category.
+                                </p>
+                            </div>
 
-                        <div
-                            style={{
-                                margin: 0,
-                                paddingTop: "1rem",
-                                borderTop: "1px solid #e5e7eb",
-                                fontSize: "0.9375rem"
-                            }}
-                        >
-                            <span style={{ color: "#ec4899", fontWeight: "bold" }}>
-                                Interpretation:
-                            </span>{" "}
-                            <span style={{ color: "#374151" }}>
-                                Your values suggest a {toneLabel} tone with {undertoneLabel} undertones.
-                            </span>
+                            <div style={{ marginBottom: "1rem", paddingTop: "1rem", borderTop: "1px solid #e5e7eb" }}>
+                                <p style={{ margin: "0 0 0.5rem 0" }}>
+                                    <strong>Why we use CIELAB: </strong>CIELAB mathematically maps human color perception. Using your precise L*, a*, and b* values, we can determine your skin tone and match you with harmonizing makeup shades.
+                                </p>
+                                <p style={{ margin: "0 0 0.25rem 0" }}><strong>L (Lightness):</strong> 0 (black) to 100 (white)</p>
+                                <p style={{ margin: "0 0 0.25rem 0" }}><strong>a (Green-Red):</strong> Negative is cooler/green, positive is warmer/red</p>
+                                <p style={{ margin: 0 }}><strong>b (Blue-Yellow):</strong> Negative is cooler/blue, positive is warmer/yellow</p>
+                            </div>
+
+                            <div
+                                style={{
+                                    margin: 0,
+                                    paddingTop: "1rem",
+                                    borderTop: "1px solid #e5e7eb",
+                                    fontSize: "0.9375rem"
+                                }}
+                            >
+                                <span style={{ color: "#ec4899", fontWeight: "bold" }}>
+                                    Interpretation:
+                                </span>{" "}
+                                <span style={{ color: "#374151" }}>
+                                    Your ITA° relates to a {toneLabel} tone, and your specific a* and b* values indicate {undertoneLabel} undertones.
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>,
                 document.body
             )}
-
-            {/* ITA° angle */}
-            <div style={{
-                textAlign: "center",
-                padding: "0.5rem 1rem",
-                background: "#fdf2f8",
-                borderRadius: "8px",
-                width: "100%",
-                boxSizing: "border-box",
-            }}>
-                <span style={{
-                    fontSize: "0.75rem",
-                    color: "#9ca3af",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.05em",
-                }}>
-                    ITA° Angle
-                </span>
-                <div style={{ fontSize: "1.25rem", fontWeight: 700, color: "#ec4899", fontFamily: "monospace" }}>
-                    {result.itaAngle.toFixed(2)}°
-                </div>
-            </div>
         </>
     );
 }
@@ -455,16 +530,18 @@ function RegionCrop({
 
 // ── CIELAB value box ────────────────────────────────────────────────────────
 
-function LabValueBox({ label, value }: { label: string; value: string }) {
+function LabValueBox({ label, value, axisColor }: { label: string; value: string; axisColor?: string }) {
     return (
-        <div style={{ border: "2px solid #f9a8d4", borderRadius: "10px", padding: "0.625rem 0.5rem", textAlign: "center" }}>
+        <div style={{ border: "1.5px solid #f9a8d4", borderRadius: "10px", padding: "0.625rem 0.5rem", textAlign: "center", background: "#fff" }}>
             <div style={{
-                fontSize: "0.6875rem", color: "#9ca3af", fontWeight: 600,
-                textTransform: "uppercase", marginBottom: "0.25rem",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: "0.35rem", marginBottom: "0.25rem"
             }}>
-                {label}
+                {axisColor && <div style={{ width: "10px", height: "10px", borderRadius: "5px", background: axisColor, boxShadow: "0 1px 2px rgba(0,0,0,0.1)" }} />}
+                <span style={{ fontSize: "0.875rem", color: "#6b7280", fontWeight: 700 }}>
+                    {label}
+                </span>
             </div>
-            <div style={{ fontSize: "1.375rem", fontWeight: 700, color: "#ec4899", fontFamily: "monospace" }}>
+            <div style={{ fontSize: "1.25rem", fontWeight: 800, color: "#ec4899", fontFamily: "monospace" }}>
                 {value}
             </div>
         </div>

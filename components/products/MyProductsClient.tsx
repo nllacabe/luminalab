@@ -31,9 +31,9 @@ export default function MyProductsClient() {
             {/* Left column — product collection */}
             <div className="my-products-col-left">
                 {loading && products.length === 0 ? (
-                    <div style={{ textAlign: "center", padding: "2rem" }}>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "3rem 1rem" }}>
                         <div className="spinner" style={{ width: "1.5rem", height: "1.5rem" }} />
-                        <p style={{ color: "#9ca3af", fontSize: "0.875rem", marginTop: "0.75rem" }}>
+                        <p style={{ color: "#9ca3af", fontSize: "0.875rem", marginTop: "1rem" }}>
                             Loading your products…
                         </p>
                     </div>
