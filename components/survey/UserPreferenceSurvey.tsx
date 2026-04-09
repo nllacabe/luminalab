@@ -464,10 +464,13 @@ export default function UserPreferenceSurvey({ brands, initialPrefs, onComplete,
                                 label={st.label}
                                 name="skin_type"
                                 checked={skinType === st.id}
-                                onChange={() => setSkinType(st.id)}
+                                onChange={() => setSkinType(prev => prev === st.id ? "" : st.id)}
                             />
                         ))}
                     </div>
+                    <p style={{ fontSize: "0.6875rem", color: "#9ca3af", marginTop: "0.375rem", fontStyle: "italic", marginLeft: "0.375rem" }}>
+                        Leave empty to show products for all skin types
+                    </p>
                 </section>
 
                 <Divider />
